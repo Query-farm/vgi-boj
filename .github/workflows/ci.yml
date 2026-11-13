@@ -42,11 +42,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # template-only:start
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        # template-only:end
         # macOS minutes cost 10x on private repos; add macos-latest here when you need it.
-        # fork-only: os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest]
         transport: [stdio, launch, http]
         exclude:
           - os: windows-latest
@@ -69,7 +66,7 @@ jobs:
         run: |
           if [ "$RUNNER_OS" = "Windows" ]; then bin="$PWD/.venv/Scripts"; tools="$PWD/.tools/Scripts"; exe=.exe
           else bin="$PWD/.venv/bin"; tools="$PWD/.tools/bin"; exe=""; fi
-          export WORKER="$bin/vgi-starter-worker$exe"
+          export WORKER="$bin/vgi-boj-worker$exe"
           export HAYBARN_UNITTEST="$tools/haybarn-unittest$exe"
           export RECIPES_WORKER="$bin/python$exe $PWD/examples/run.py"
           if [ "$RUNNER_OS" = "Windows" ]; then
@@ -91,16 +88,8 @@ jobs:
         with:
           python-version: "3.13"
       - run: uv sync --locked --no-dev
-      - name: Read fail_on from vgi-lint.toml
-        id: lintcfg
-        run: python3 -c 'import tomllib; print("fail_on=" + tomllib.load(open("vgi-lint.toml", "rb")).get("fail_on", "error"))' >> "$GITHUB_OUTPUT"
-      - uses: Query-farm/vgi-lint-check@v2
-        with:
-          location: ${{ github.workspace }}/.venv/bin/vgi-starter-worker
-          # Set in vgi-lint.toml, so local runs and CI agree.
-          fail-on: ${{ steps.lintcfg.outputs.fail_on }}
-          # Set to false if your examples need real credentials or network access.
-          execute: true
+      - name: Metadata quality with executable offline fixtures
+        run: make lint-explain
 
   docker:
     name: Docker image smoke test
@@ -113,3 +102,37 @@ jobs:
           docker run -d --name smoke -p 8000:8000 worker:ci
           for _ in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/health && exit 0; sleep 1; done
           docker logs smoke; exit 1
+
+  stock-duckdb:
+    name: Stock DuckDB 2.0 contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: make test-duckdb
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: duckdb-verification
+          path: build/duckdb-verification.json
+
+  artifact-contract:
+    name: Installed wheel and source archive SQL contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: make package
+      - name: Verify isolated installed artifacts
+        run: python3 ci/verify-artifacts.py --python 3.13
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: artifact-verification
+          path: build/*verification.json

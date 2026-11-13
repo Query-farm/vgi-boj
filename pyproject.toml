@@ -1,9 +1,9 @@
 [project]
-name = "vgi-starter-worker"
+name = "vgi-boj-worker"
 version = "0.1.0"
-description = "A VGI worker for DuckDB, generated from the Query.Farm VGI starter template."
+description = "Typed BOJ statistics, discovery and observations for VGI-enabled SQL engines."
 readme = "README.md"
-license = "MIT-0"
+license = "0BSD"
 license-files = ["LICENSE"]
 requires-python = ">=3.13"
 dependencies = [
@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-vgi-starter-worker = "starter_worker.worker:main"
+vgi-boj-worker = "boj_worker.worker:main"
 
 [dependency-groups]
 dev = [
@@ -31,7 +31,7 @@ requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/starter_worker"]
+packages = ["src/boj_worker"]
 
 [tool.ruff]
 line-length = 120
@@ -49,7 +49,7 @@ ignore = ["D203", "D213", "RUF012"]
 [tool.mypy]
 strict = true
 python_version = "3.13"
-files = ["src", "tests", "examples"]
+files = ["src", "tests", "examples", "ci"]
 
 [[tool.mypy.overrides]]
 module = ["vgi.*", "vgi_rpc.*"]
@@ -65,3 +65,4 @@ skip-checking-short-docstrings = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]

@@ -1,0 +1,106 @@
+# Official API contract: discovery, source values, errors and revision semantics.
+require vgi
+
+require-env BOJ_WORKER
+
+statement ok
+LOAD json;
+
+statement ok
+ATTACH 'boj' (TYPE vgi, LOCATION '{BOJ_WORKER}');
+
+# curated discovery
+query T
+SELECT count(*) FROM boj.main.datasets();
+----
+10
+
+# series discovery
+query T
+SELECT series_code FROM boj.main.series('IR01') ORDER BY series_code;
+----
+MADR1M
+MADR1Z@D
+
+# localized metadata
+query T
+SELECT name_ja FROM boj.main.series('IR01', language := 'jp', max_rows := 1);
+----
+金利
+
+# hierarchy headings
+query TTT
+SELECT series_code, layer1, layer2 FROM boj.main.layers('IR01');
+----
+NULL	1	1
+
+# automatic pages
+query TT
+SELECT count(*), count(value) FROM boj.main.observations('IR01', ['MADR1Z@D', 'OTHERD']);
+----
+6	4
+
+# source numeric text
+query TT
+SELECT period, value_text FROM boj.main.observations('IR01', ['MADR1Z@D'], start_period := '202401', end_period := '202401') ORDER BY period;
+----
+20240101	0.30
+20240102	NULL
+20240103	0.35
+
+# cap across pages
+query T
+SELECT count(*) FROM boj.main.observations('IR01', ['MADR1Z@D', 'OTHERD'], max_rows := 4);
+----
+4
+
+# layer selection
+query T
+SELECT count(*) FROM boj.main.layer_observations('IR01', 'D', '1,1');
+----
+6
+
+# empty data
+query T
+SELECT count(*) FROM boj.main.observations('IR01', ['MADR1Z@D'], start_period := '210001');
+----
+0
+
+# invalid array alignment
+statement error
+SELECT * FROM boj.main.observations('BADARRAY', ['MADR1Z@D']);
+----
+lengths
+
+# stalled source cursor
+statement error
+SELECT * FROM boj.main.observations('STALLED', ['MADR1Z@D']);
+----
+stalled
+
+# repeated page
+statement error
+SELECT * FROM boj.main.observations('REPEAT', ['MADR1Z@D','OTHERD']);
+----
+repeated
+
+# application API error
+statement error
+SELECT * FROM boj.main.observations('APIERROR', ['MADR1Z@D']);
+----
+M181013E
+
+# wrong period format
+statement error
+SELECT * FROM boj.main.observations('IR01', ['MADR1Z@D'], start_period := '20240101');
+----
+YYYYMM
+
+# invalid quarter
+statement error
+SELECT * FROM boj.main.layer_observations('IR01', 'Q', '1', start_period := '202405');
+----
+frequency
+
+statement ok
+DETACH boj;

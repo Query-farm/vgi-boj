@@ -12,5 +12,10 @@
   "optional_files": [
     ".github/workflows/nightly.yml",
     ".github/dependabot.yml"
-  ]
+  ],
+  "name": "boj",
+  "repo": "Query-farm/vgi-boj",
+  "initialized": "2026-11-13",
+  "source_revision": "9cca9105474d6e0052b8e343c8ea21f3d1a7503c",
+  "source_repository": "https://github.com/Query-farm/vgi-starter-python"
 }

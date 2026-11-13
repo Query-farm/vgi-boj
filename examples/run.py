@@ -9,7 +9,15 @@ import importlib
 import sys
 from pathlib import Path
 
-RECIPES = ["transform_rows", "aggregate", "pushdown_sqlite", "cache_expensive_call", "catalog_tables", "copy_to_sink"]
+RECIPES = [
+    "starter_samples.worker",
+    "transform_rows",
+    "aggregate",
+    "pushdown_sqlite",
+    "cache_expensive_call",
+    "catalog_tables",
+    "copy_to_sink",
+]
 
 
 def main() -> None:

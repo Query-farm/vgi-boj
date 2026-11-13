@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.13"
 resolution-markers = [
     "python_full_version >= '3.15'",
@@ -903,6 +903,35 @@ wheels = [
 ]
 
 [[package]]
+name = "vgi-boj-worker"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "vgi-python", extra = ["http"] },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "mypy" },
+    { name = "pyarrow-stubs" },
+    { name = "pytest" },
+    { name = "ruff" },
+    { name = "vgi-python", extra = ["haybarn"] },
+]
+
+[package.metadata]
+requires-dist = [{ name = "vgi-python", extras = ["http"], specifier = ">=0.51.1,<0.52" }]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "mypy", specifier = ">=1.18" },
+    { name = "pyarrow-stubs", specifier = ">=20.0" },
+    { name = "pytest", specifier = ">=8.4" },
+    { name = "ruff", specifier = ">=0.14" },
+    { name = "vgi-python", extras = ["haybarn"], specifier = ">=0.51.1,<0.52" },
+]
+
+[[package]]
 name = "vgi-python"
 version = "0.51.1"
 source = { registry = "https://pypi.org/simple" }
@@ -953,35 +982,6 @@ http = [
     { name = "pynacl", marker = "sys_platform == 'linux'" },
     { name = "waitress" },
     { name = "zstandard" },
-]
-
-[[package]]
-name = "vgi-starter-worker"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "vgi-python", extra = ["http"] },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "mypy" },
-    { name = "pyarrow-stubs" },
-    { name = "pytest" },
-    { name = "ruff" },
-    { name = "vgi-python", extra = ["haybarn"] },
-]
-
-[package.metadata]
-requires-dist = [{ name = "vgi-python", extras = ["http"], specifier = ">=0.51.1,<0.52" }]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "mypy", specifier = ">=1.18" },
-    { name = "pyarrow-stubs", specifier = ">=20.0" },
-    { name = "pytest", specifier = ">=8.4" },
-    { name = "ruff", specifier = ">=0.14" },
-    { name = "vgi-python", extras = ["haybarn"], specifier = ">=0.51.1,<0.52" },
 ]
 
 [[package]]

@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "catalog": "boj",
+  "worker": [
+    ".venv/bin/vgi-boj-worker"
+  ],
+  "api_base_url": "https://www.stat-search.boj.or.jp/api/v1",
+  "key_required": false,
+  "checks": [
+    {
+      "name": "curated discovery",
+      "sql": "SELECT count(*) FROM boj.main.datasets()",
+      "rows": [
+        [
+          10
+        ]
+      ]
+    },
+    {
+      "name": "series discovery",
+      "sql": "SELECT series_code FROM boj.main.series('IR01') ORDER BY series_code",
+      "rows": [
+        [
+          "MADR1M"
+        ],
+        [
+          "MADR1Z@D"
+        ]
+      ]
+    },
+    {
+      "name": "localized metadata",
+      "sql": "SELECT name_ja FROM boj.main.series('IR01', language := 'jp', max_rows := 1)",
+      "rows": [
+        [
+          "金利"
+        ]
+      ]
+    },
+    {
+      "name": "hierarchy headings",
+      "sql": "SELECT series_code, layer1, layer2 FROM boj.main.layers('IR01')",
+      "rows": [
+        [
+          null,
+          1,
+          1
+        ]
+      ]
+    },
+    {
+      "name": "automatic pages",
+      "sql": "SELECT count(*), count(value) FROM boj.main.observations('IR01', ['MADR1Z@D', 'OTHERD'])",
+      "rows": [
+        [
+          6,
+          4
+        ]
+      ]
+    },
+    {
+      "name": "source numeric text",
+      "sql": "SELECT period, value_text FROM boj.main.observations('IR01', ['MADR1Z@D'], start_period := '202401', end_period := '202401') ORDER BY period",
+      "rows": [
+        [
+          "20240101",
+          "0.30"
+        ],
+        [
+          "20240102",
+          null
+        ],
+        [
+          "20240103",
+          "0.35"
+        ]
+      ]
+    },
+    {
+      "name": "cap across pages",
+      "sql": "SELECT count(*) FROM boj.main.observations('IR01', ['MADR1Z@D', 'OTHERD'], max_rows := 4)",
+      "rows": [
+        [
+          4
+        ]
+      ]
+    },
+    {
+      "name": "layer selection",
+      "sql": "SELECT count(*) FROM boj.main.layer_observations('IR01', 'D', '1,1')",
+      "rows": [
+        [
+          6
+        ]
+      ]
+    },
+    {
+      "name": "empty data",
+      "sql": "SELECT count(*) FROM boj.main.observations('IR01', ['MADR1Z@D'], start_period := '210001')",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    }
+  ],
+  "error_checks": [
+    {
+      "name": "invalid array alignment",
+      "sql": "SELECT * FROM boj.main.observations('BADARRAY', ['MADR1Z@D'])",
+      "message": "lengths"
+    },
+    {
+      "name": "stalled source cursor",
+      "sql": "SELECT * FROM boj.main.observations('STALLED', ['MADR1Z@D'])",
+      "message": "stalled"
+    },
+    {
+      "name": "repeated page",
+      "sql": "SELECT * FROM boj.main.observations('REPEAT', ['MADR1Z@D','OTHERD'])",
+      "message": "repeated"
+    },
+    {
+      "name": "application API error",
+      "sql": "SELECT * FROM boj.main.observations('APIERROR', ['MADR1Z@D'])",
+      "message": "M181013E"
+    },
+    {
+      "name": "wrong period format",
+      "sql": "SELECT * FROM boj.main.observations('IR01', ['MADR1Z@D'], start_period := '20240101')",
+      "message": "YYYYMM"
+    },
+    {
+      "name": "invalid quarter",
+      "sql": "SELECT * FROM boj.main.layer_observations('IR01', 'Q', '1', start_period := '202405')",
+      "message": "frequency"
+    }
+  ],
+  "live_checks": [
+    {
+      "name": "local discovery",
+      "sql": "SELECT count(*) FROM boj.main.datasets()",
+      "rows": [
+        [
+          10
+        ]
+      ]
+    },
+    {
+      "name": "live metadata",
+      "sql": "SELECT count(*) FROM boj.main.series('IR01')",
+      "rows": [
+        [
+          2
+        ]
+      ]
+    },
+    {
+      "name": "live headings",
+      "sql": "SELECT count(*) > 0 FROM boj.main.layers('IR01')",
+      "rows": [
+        [
+          true
+        ]
+      ]
+    },
+    {
+      "name": "live observations",
+      "sql": "SELECT count(*), min(value) FROM boj.main.observations('IR01',['MADR1Z@D'],start_period := '202401',end_period := '202401')",
+      "rows": [
+        [
+          31,
+          0.3
+        ]
+      ]
+    },
+    {
+      "name": "live layer",
+      "sql": "SELECT count(*), min(value) FROM boj.main.layer_observations('IR01','D','1,1',start_period := '202401',end_period := '202401')",
+      "rows": [
+        [
+          31,
+          0.3
+        ]
+      ]
+    },
+    {
+      "name": "live Japanese metadata",
+      "sql": "SELECT count(*) > 0 FROM boj.main.series('IR01',language := 'jp') WHERE name_ja IS NOT NULL",
+      "rows": [
+        [
+          true
+        ]
+      ]
+    }
+  ]
+}

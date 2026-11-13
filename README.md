@@ -1,314 +1,188 @@
-<!-- managed-by: vgi-starters (edit upstream in shared/README.md.tmpl, then run tools/render.py) -->
-<p align="center">
-  <img src="https://query.farm/media-kit/products/vgi/vgi-logo.png" alt="Vector Gateway Interface (VGI)" width="320">
-</p>
+# vgi-boj
 
-<p align="center"><em>A Query.Farm VGI worker for DuckDB, written in Python.</em></p>
+Python VGI worker for Bank of Japan statistics. It exposes five typed SQL
+functions with discovery metadata, original source values and HTTP bearer authentication.
 
-# VGI Starter Worker — Python
+## Run locally
 
-[![CI](https://github.com/Query-farm/vgi-starter-python/actions/workflows/ci.yml/badge.svg)](https://github.com/Query-farm/vgi-starter-python/actions/workflows/ci.yml)
-[![vgi worker: query.farm](https://query.farm/media-kit/shields/vgi-worker.svg)](https://query.farm)
+Requires Python 3.13+ and [uv](https://docs.astral.sh/uv/).
 
-[VGI](https://query.farm/vgi) lets DuckDB call functions that live in a separate
-process: your code, in any language, exposed as ordinary SQL. This worker adds
-three example functions that you rename and replace with your own:
-
-| Function | Kind | Shows you how to |
-|---|---|---|
-| `greet(name)` / `greet(name, style)` | scalar | vectorize over a column, overload, constrain a constant |
-| `sequence_table(count, step := 1)` | table | stream rows in batches, take named arguments |
-| `fetch_items(base_url, page_size := 100)` | table | page through a REST API, retry, read a secret |
-
-<!-- template-only:start -->
-## Use this template
-
-This repository is a **template**. Click **Use this template** on GitHub, or:
-
-```bash
-gh repo create my-org/weather-worker --template Query-farm/vgi-starter-python --private --clone
-cd weather-worker
-make init NAME=weather     # renames catalog, package, binary, env vars; removes this section
-make check                 # lint + tests over every transport + metadata score
-```
-
-Prefer to work with an AI coding agent? `make init` first, then hand it
-[AGENTS.md](AGENTS.md). See [Using with coding agents](#using-with-coding-agents).
-
-Starters exist for [Python](https://github.com/Query-farm/vgi-starter-python),
-[TypeScript](https://github.com/Query-farm/vgi-starter-typescript),
-[Go](https://github.com/Query-farm/vgi-starter-go),
-[Rust](https://github.com/Query-farm/vgi-starter-rust),
-[Java](https://github.com/Query-farm/vgi-starter-java) and
-[C#](https://github.com/Query-farm/vgi-starter-csharp). They are generated from
-[Query-farm/vgi-starters](https://github.com/Query-farm/vgi-starters); send
-changes there.
-<!-- template-only:end -->
-
-## Quick start
-
-**Prerequisites:** Python 3.13+ and [uv](https://docs.astral.sh/uv/) (it runs the SQL
-test runner and the metadata checker).
-
-```bash
+```sh
+cd /absolute/path/to/vgi-boj
 make build
 ```
 
-Then open DuckDB 2.0 or [Haybarn](https://query.farm/products/haybarn) and attach the
-worker. `LOCATION` is the command DuckDB runs to start it; use an absolute path,
-because a relative one resolves against DuckDB's working directory.
-
-**DuckDB 2.0:**
+Stock DuckDB 2.0.0 with the signed Query.Farm VGI extension:
 
 ```sql
 SET allow_extension_repositories = 'allowed';
-CREATE EXTENSION REPOSITORY IF NOT EXISTS query_farm WITH PREFIX 'https://duckdb-extensions.query.farm';
+CREATE EXTENSION REPOSITORY IF NOT EXISTS query_farm
+  WITH PREFIX 'https://duckdb-extensions.query.farm';
 INSTALL vgi FROM query_farm;
 LOAD vgi FROM query_farm;
-ATTACH 'starter' (TYPE vgi, LOCATION '/abs/path/to/vgi-starter-python/.venv/bin/vgi-starter-worker');
+ATTACH 'boj' (TYPE vgi,
+  LOCATION '/absolute/path/to/vgi-boj/.venv/bin/vgi-boj-worker');
+
+SELECT period, value, value_text, unit
+FROM boj.main.observations('IR01', ['MADR1Z@D'],
+  start_period := '202401', end_period := '202401')
+ORDER BY period;
 ```
 
-**Haybarn 2.0** (`uvx haybarn-cli`):
+For Haybarn 2.0.0rc11, use its VGI extension and the same `ATTACH`/`SELECT` statements.
+The worker can also use `launch:/absolute/path/to/worker` for Unix-socket pooling.
+Diagnostics go to stderr; stdout belongs to Arrow IPC in stdio mode.
 
-```sql
-INSTALL vgi FROM community;
-LOAD vgi;
-ATTACH 'starter' (TYPE vgi, LOCATION '/abs/path/to/vgi-starter-python/.venv/bin/vgi-starter-worker');
-```
+## SQL interface
 
-Now call the functions:
-
-```sql
-SELECT starter.main.greet('Ada');                         -- Hi, Ada!
-SELECT starter.main.greet('Ada', 'formal');               -- Good day, Ada.
-SELECT * FROM starter.main.sequence_table(5, step := 2) ORDER BY n;
-```
-
-`fetch_items` pages through a REST API. Try it against the public demo API (25 fixed items):
-
-```sql
-SELECT category, count(*) AS items, round(avg(price), 2) AS avg_price
-FROM starter.main.fetch_items('https://vgi-starter-api.query-farm.services/v1')
-GROUP BY category ORDER BY category;
-```
-
-If an older cached extension misbehaves, refresh it with `FORCE INSTALL vgi FROM query_farm;`
-(DuckDB) or `FORCE INSTALL vgi FROM community;` (Haybarn).
-
-## Using it in a pipeline
-
-Worker functions compose with everything else in DuckDB:
-
-```sql
--- Materialize an API into a local table.
-CREATE TABLE items AS SELECT * FROM starter.main.fetch_items('https://vgi-starter-api.query-farm.services/v1');
-
--- Join it with local files.
-SELECT i.name, i.price, s.units
-FROM items i JOIN 'sales.parquet' s ON s.item_id = i.id;
-
--- Call a scalar per row of another table.
-SELECT customer, starter.main.greet(customer, 'formal') FROM read_csv('customers.csv');
-```
-
-## Project layout
-
-```
-src/starter_worker/
-  worker.py        # assembles the catalog; add new functions to FUNCTIONS
-  meta.py          # catalog/schema metadata + helpers (object_tags, column)
-  greet.py         # scalar example (overloads, ConstParam choices)
-  sequence.py      # table function example (named args, streaming state)
-  fetch_items.py   # REST API table function (pagination, retries, secrets)
-tests/             # pytest unit tests (in-process client)
-test/sql/          # sqllogictest files run through DuckDB
-test/mock_api/     # offline mock of the REST API used by tests
-examples/          # recipes: pushdown, caching, catalog tables, aggregates, COPY …
-ci/                # integration harness used by `make test-sql` and CI
-scripts/           # vgi_template.py (init / template-diff)
-vgi-agent-tests.yaml  # private graders for the agent test tasks
-```
-
-## Adding a function
-
-1. Create `src/starter_worker/<name>.py`. Copy the closest example: `greet.py` for a
-   scalar, `sequence.py` for a generator, `fetch_items.py` for an API.
-2. Declare arguments with `Annotated[..., Param(...)]`/`ConstParam(...)` (scalars) or a
-   frozen dataclass of `Annotated[..., Arg(...)]` (table functions). Use `Arg(0, ...)`
-   for positional arguments and `Arg("name", default=...)` for named ones.
-3. Give the class a `class Meta` with `name`, `description`, `tags=object_tags(...)`
-   and `examples`.
-4. Add the class to `FUNCTIONS` in `src/starter_worker/worker.py`.
-
-**Which kind of function?**
-
-| You want to… | Use |
+| Function | Purpose |
 |---|---|
-| compute one value per input row | a **scalar** function |
-| return a set of rows from arguments (an API, a file, a generator) | a **table** function |
-| transform or aggregate the rows of a query | a **table in-out** function or an **aggregate** |
-| expose a fixed dataset by name (`SELECT * FROM starter.main.t`) | a **catalog table** |
-| write data out to a file or service | `COPY … TO` with a copy function |
-| accept `INSERT` / `UPDATE` / `DELETE` | a catalog table with insert/update/delete functions |
+| `datasets(query := '')` | Ten curated official database starting points. |
+| `series(database, query := '', language := 'en')` | Full database metadata with optional local filtering. |
+| `layers(database)` | Hierarchy headings and layer numbers. |
+| `observations(database, series_codes)` | Same-frequency series with automatic source pagination. |
+| `layer_observations(database, frequency, layer)` | Source hierarchy and frequency selection with pagination. |
 
-The [examples/](examples/) folder has a recipe for most of these. Writable tables have no
-recipe:
+`datasets` is curated; all valid official database identifiers can be used. The
+API manual has the complete database list. `language` accepts `en` or `jp` and
+preserves English/Japanese fields when supplied. `include_headings := true` on
+`series` includes metadata headings with NULL series codes. `layers` always returns
+only headings; its inherited `include_headings` argument has no effect.
 
-A writable table is a catalog `Table` that names a table in-out function per operation in
-`insert_function`, `update_function` and `delete_function`, with the richest result each one
-produces in `write_result_modes`. The helpers in `vgi.write_results` (`write_options`,
-`write_result_schema`, `write_result_batch`, `row_id_field`) read DuckDB's `write_options`
-argument and build the result. UPDATE and DELETE need a scan function that emits
-`row_id_field()` and declares projection pushdown. Transactions: override `attach_supports_transactions`
-and `catalog_transaction_begin` / `_commit` / `_rollback` on the catalog. Since VGI protocol 3.3
-a table's scan and write functions are table-only: hidden from `duckdb_functions()` and not
-callable from SQL. Set `expose_scan=True` on the table to keep the scan callable as an ordinary
-table function too (write functions never are). See
-[Writable tables](https://github.com/Query-farm/vgi-python/blob/main/docs/catalog-interface.md#writable-tables)
-in the vgi-python docs.
+`series_codes` accepts 1–1,250 distinct codes from one database and frequency,
+without a database prefix (use `MADR1Z@D`, not `IR01'MADR1Z@D`). Codes are normalized
+to uppercase. For hierarchy queries, frequency is `CY`, `FY`, `CH`, `FH`, `Q`, `M`,
+`W` or `D`; layer is one to five comma-separated integers or `*` wildcards.
+The source limits layer matches to 1,250 **before** frequency filtering. Narrow
+large selections or split large code lists if a server rejects a long request URL.
 
-## Secrets and configuration
+Named `start_period`/`end_period` are inclusive native request bounds: annual `YYYY`,
+half-year `YYYY01`/`YYYY02`, quarterly `YYYY01`–`YYYY04`, or `YYYYMM` for monthly,
+weekly **and daily** requests. Returned daily periods remain `YYYYMMDD` strings;
+other native periods are also preserved, with their frequency, without inventing dates.
+`W` can return several weekly subtypes; code queries cannot mix their frequencies.
 
-`fetch_items` shows the recommended pattern. A bearer token comes from a DuckDB secret
-when one exists, and from an environment variable otherwise:
+The API returns at most 250 series / 60,000 observations per page. The worker
+follows `NEXTPOSITION` exactly and rejects repeated series, non-advancing cursors,
+invalid array alignment and inconsistent metadata. `max_rows := 0` (default)
+retrieves all matching pages; a positive value is an explicit cap, up to 10 million.
+A cap may end inside one source page. Continuation state contains source positions,
+counts and at most 1,250 series identifiers, never observations or credentials.
+`last_update` and `source_timestamp` describe current source data, not historical
+vintages. This API does not provide an ALFRED-equivalent revision archive.
+
+Uses the Bank of Japan Time-Series Data Search API. The Bank of Japan does not
+guarantee this worker's content.
+
+Official references: [API manual](https://www.stat-search.boj.or.jp/info/api_manual_en.pdf),
+[service notice](https://www.stat-search.boj.or.jp/info/api_notice_en.pdf).
+The notice asks operators releasing a service that uses the API to notify the Bank
+at `post.rsd17@boj.or.jp` with subject `[Release of service using API]` and to provide
+source attribution. This repository does not send that notification automatically.
+
+## Authentication and deployment
+
+The official upstream API is public and needs no API key. HTTP access to this
+worker is a separate authentication boundary. Configure one or more strong bearer
+tokens through `VGI_BEARER_TOKENS`, using `token=principal` pairs separated by commas:
+
+```sh
+# Inject real values from your deployment secret manager; do not commit them.
+export VGI_BEARER_TOKENS="${WORKER_BEARER_TOKEN}=analytics"
+.venv/bin/vgi-boj-worker --http --host 127.0.0.1 --port 8000
+```
+
+Tokens must contain 32–4096 characters from the documented bearer alphabet
+(letters, digits, `.`, `_`, `~`, `+`, `/`, `-`), without `=`, commas or whitespace.
+Malformed configuration stops startup without printing the token. Unset bearer
+configuration leaves the SDK in its default anonymous mode: set it for shared
+services. The SDK also supports OIDC/JWT configuration; this project's measured
+authentication contract covers static bearer tokens, including multiple principals.
+`/health` stays unauthenticated for readiness checks; RPC endpoints require the token.
 
 ```sql
-CREATE SECRET (TYPE starter_api, TOKEN 'your-token');      -- per session, never logged
+INSTALL httpfs FROM core;
+LOAD httpfs;
+ATTACH 'boj' (TYPE vgi, LOCATION 'https://your-worker.example',
+  bearer_token '<injected-worker-token>');
 ```
 
-```bash
-STARTER_API_TOKEN=your-token make run-http                # for servers and containers
+Use TLS at your reverse proxy for remote access, with restricted network ingress,
+request/concurrency limits and a deployment secret manager. Process-local request
+spacing does not coordinate across replicas; allocate a shared source request budget
+at the deployment layer. No credentials are sent to the central bank or serialized
+into continuation state. Query failures omit upstream response bodies and URLs.
+
+```sh
+docker build -t vgi-boj:local .
+docker run --rm -p 127.0.0.1:8000:8000 \
+  --env VGI_BEARER_TOKENS vgi-boj:local
+# Stdio container transport:
+docker run --rm -i vgi-boj:local stdio
 ```
 
-Try it: the demo API's `/v1/auth` endpoint needs the published token `demo-token`.
+The container uses Python 3.13, locked dependencies, an unprivileged UID and a
+health check. Add platform resource limits appropriate to query concurrency and
+response sizes. Do not publish unauthenticated containers directly to the Internet.
 
-```sql
-SELECT count(*) FROM starter.main.fetch_items('https://vgi-starter-api.query-farm.services/v1/auth');   -- fails: HTTP 401
-CREATE SECRET (TYPE starter_api, TOKEN 'demo-token');
-SELECT count(*) FROM starter.main.fetch_items('https://vgi-starter-api.query-farm.services/v1/auth');   -- 25
-```
+## Operations and data semantics
 
-Never bake credentials into the image or the source. If a function can't run without
-real credentials, its examples can't execute in CI either. Set `execute: false` on the
-metadata check for that worker (see `.github/workflows/ci.yml`), and add
-`LINT_ARGS ?= --no-execute` to the Makefile so local runs match.
+NULL SQL arguments are rejected. Missing observations become SQL NULL; original
+numeric strings remain in `value_text` for explicit DECIMAL conversion. `value`
+is a DOUBLE convenience column and has ordinary binary floating-point limits.
+Units, frequency, seasonal-adjustment categories and source period conventions are
+preserved, not harmonized across banks. Use function arguments for source filtering;
+SQL `WHERE` clauses run after retrieval. An explicit `max_rows` cap intentionally
+returns a subset; it is not an implicit source pagination limit.
 
-## Testing
+Each source request has a timeout, bounded response size, retry budget, process-local
+spacing and retries for 429/5xx/network failures. Retry-After is respected; a delay
+beyond the budget fails the query instead of retrying early. Redirects are rejected.
+Malformed or inconsistent responses fail visibly rather than becoming partial success.
+There is no persistent cache or automatic background polling. SQL consumers should
+use transactions/staging tables when persisting streamed results from an API.
 
-```bash
-make test-unit                 # fast Python unit tests
-make test-sql                  # test/sql/*.test through DuckDB (stdio)
-make test-sql TRANSPORT=http   # …over HTTP (also: launch)
-make check                     # everything CI runs
-```
-
-`test/sql/*.test` files are [sqllogictest](https://duckdb.org/docs/stable/dev/sqllogictest/intro)
-scripts. `ci/run-integration.sh` runs them against your worker and fails on any
-unexpected skip, so a broken transport can't hide behind a green run.
-`fetch_items` is tested against `test/mock_api/server.py` so tests are fast and
-offline.
-
-**Testing against real data:** put live tests in their own `.test` file that starts with
-`require-env STARTER_LIVE`. They run only when that variable is set. Add the skip reason
-to `EXPECTED_SKIP_REASONS` in CI.
-
-## Metadata and the quality score
-
-DuckDB, agents and documentation tools discover your functions through their metadata:
-titles, descriptions, argument docs, examples and keywords.
-[vgi-lint](https://github.com/Query-farm/vgi-lint-check) checks it, and CI runs it on
-every push. Its settings live in `vgi-lint.toml`, which `make lint-explain`,
-`vgi-lint lint`, and CI all read. This template scores 100/100 with no findings.
-
-```bash
-make lint-explain                              # findings, each with its fix
-make lint-explain LINT_ARGS="--format agent"   # the same, grouped for coding agents
-make lint-ai                                   # optional: an agent must solve vgi-agent-tests.yaml
-```
-
-Each report also states an **assurance level**: how much was actually verified.
-
-| Level | Reached when | Here |
+| Environment setting | Default | Meaning |
 |---|---|---|
-| L1 structural | the static metadata is clean | workers that need real credentials (`execute: false` in CI) |
-| L2 behavioural | the examples also run and return what they claim | **the CI gate** |
-| L3 semantic | an agent solves the worker's own test tasks, and the docs are reviewed | `make lint-ai`, before publishing |
+| `BOJ_API_BASE_URL` | Official API endpoint | Operator-controlled HTTPS override; no URL credentials, query or fragment. |
+| `BOJ_TIMEOUT_SECONDS` | 30 | Socket timeout (0.1–120 seconds). |
+| `BOJ_MAX_ATTEMPTS` | 4 | Attempts per page/request (1–6). |
+| `BOJ_RETRY_BUDGET_SECONDS` | 120 | Total request/retry budget (1–600 seconds). |
+| `BOJ_MIN_INTERVAL_SECONDS` | 1 | Minimum spacing between requests in one process (0–60 seconds). |
+| `BOJ_MAX_RESPONSE_BYTES` | 16 MiB | Response bound (1 KiB–64 MiB); narrow source selection on overflow. |
+| `BOJ_ALLOW_INSECURE_HTTP` | unset | `1` permits only explicit loopback HTTP fixtures. |
 
-- **How strict.** Your copy fails on warnings (`fail_on = "warning"` in `vgi-lint.toml`).
-  Raise it to `"info"` before you publish the worker for others.
-- **The linter isn't pinned.** It tracks the current quality bar, so a new rule can flag
-  metadata that passed yesterday. Fix it, or waive the finding.
-- **Waivers.** If a finding is genuinely wrong for your worker, waive it in
-  `vgi-lint.toml` with a `kind` and a `reason`.
-- **Existing workers.** If you're adding this gate to a worker that already has
-  findings, record them with `vgi-lint lint --baseline vgi-lint-baseline --update-baseline`
-  and set `baseline` in `vgi-lint.toml`. After that, only new findings fail.
+TLS certificate verification is always enabled. If a managed Python installation
+cannot find your system CA store, point `SSL_CERT_FILE` at the trusted CA bundle;
+do not disable verification. ECB and BoE XML parsers reject DTDs, entities and
+external references. BoJ JSON parsing rejects non-finite numbers and preserves
+fractional numeric lexemes before Arrow conversion.
 
-Metadata lives in `src/starter_worker/meta.py` and each function's `class Meta`.
+## Verification and release
 
-## Logging and debugging
-
-stdout carries the Arrow protocol, so **never print to stdout**. Log to stderr instead.
-Use the standard `logging` module (the SDK routes it to stderr); `--debug` or `--log-level DEBUG` turns it up.
-
-- Under DuckDB (stdio/launch), worker stderr shows up in DuckDB's error messages and
-  terminal.
-- In Docker it goes to `docker logs`.
-- `make debug` runs one query against the worker with debug logging on.
-
-## Deploying
-
-The same binary serves stdio (DuckDB starts it locally) or HTTP (you host it):
-
-```bash
-docker build -t weather-worker .
-docker run -p 8000:8000 -e STARTER_API_TOKEN=... weather-worker   # health: GET /health
+```sh
+make check        # Ruff format/lint, mypy strict, pydoclint, pytest, real SQL, metadata
+make smoke-live   # Explicit live checks against the official source
+make package      # Wheel and source archive in dist/
+uv run python ci/verify-artifacts.py --python 3.13
 ```
 
-```sql
-ATTACH 'starter' (TYPE vgi, LOCATION 'https://workers.example.com/starter');
-```
+`make check` runs original starter and product SQL tests over Haybarn stdio, Unix
+launch and HTTP, followed by metadata assurance L2 and stock DuckDB 2.0.0 over stdio
+and authenticated HTTP. Fixtures are deterministic and do not require real keys.
+The metadata gate fails on info findings and has no waivers. CI repeats checks on
+Linux/Windows and Python 3.13/3.14, plus container and installed artifact contracts.
+Local verification reports live in `build/`; see [VALIDATION.md](VALIDATION.md).
 
-Put hosted workers behind TLS and authentication. See
-[authentication](https://query.farm/vgi/authentication) for bearer tokens and JWTs, and
-[distributing a worker](https://query.farm/vgi/distributing-a-worker) for packaging.
-Pass secrets with `-e` or your platform's secret manager.
+Starter: [Query.Farm Python starter](https://github.com/Query-farm/vgi-starter-python),
+revision `9cca9105474d6e0052b8e343c8ea21f3d1a7503c`, template 1.3.0.
+The locked SDK is `vgi-python 0.51.1` with `vgi-rpc 0.53.1`; keep those protocol
+versions aligned with the tested extension. Original examples/tests remain under
+`examples/starter_samples`, separate from this worker's public catalog.
 
-## Releasing
-
-Push a tag like `v0.1.0`. The release workflow builds the wheel and sdist, attaches them to the GitHub release, and (if you set the repository variable `PYPI_PUBLISH=true` and configure PyPI Trusted Publishing) publishes to PyPI, so users can run `uvx vgi-starter-worker`. Without PyPI, users install straight from the repo with `uvx --from git+https://github.com/Query-farm/vgi-starter-python@v0.1.0 vgi-starter-worker`. Every artifact is signed with cosign and
-carries SLSA build provenance. `ci/check-version.sh` makes sure the tag matches the
-version in `pyproject.toml`.
-
-## Using with coding agents
-
-[AGENTS.md](AGENTS.md) is written for AI coding agents (Claude Code reads it via
-`CLAUDE.md`; Codex, Cursor and others read it directly). It covers the commands, the
-recipe for adding a function, the metadata checklist and the sharp edges. A good first
-prompt:
-
-> Read AGENTS.md. Replace `fetch_items` with `forecast(lat DOUBLE, lon DOUBLE)` that calls
-> the Open-Meteo API. Include full metadata, a mock-server test and a `STARTER_LIVE` test.
-> You're done when `make check` passes.
-
-## Keeping up with the template
-
-`make template-diff` shows what changed upstream (CI, docs, examples) since your copy was
-made. Your copy records its template version in `.vgi-starter.json`.
-
-## Learn more
-
-- [What is VGI?](https://query.farm/vgi) · [Getting started](https://query.farm/vgi/getting-started) · [Building a worker](https://query.farm/vgi/building-a-worker)
-- [Python SDK docs](https://query.farm/vgi/docs/python/): [scalar tutorial](https://query.farm/vgi/docs/python/tutorial/scalar/), [table tutorial](https://query.farm/vgi/docs/python/tutorial/table/)
-- [Distributing a worker](https://query.farm/vgi/distributing-a-worker) · [Choosing a language](https://query.farm/vgi/languages) · [llms.txt](https://query.farm/vgi/llms.txt)
-- SDK source: [vgi-python](https://github.com/Query-farm/vgi-python) · RPC layer: [https://vgi-rpc-python.query.farm](https://vgi-rpc-python.query.farm)
-
-## Support
-
-Open an issue on this repository. For VGI itself, see [query.farm](https://query.farm).
-
-## Authorship & license
-
-The starter template is written by [Query.Farm](https://query.farm) and released under
-the [BSD Zero Clause License](LICENSE) (0BSD). Use it for anything, with no attribution
-required. Replace this section with your own license once the code is yours.
+The included release workflow gates tagged releases on CI and produces signed
+artifacts and provenance. No remote repository, package publication or hosted
+service is created by a local build. Source code is 0BSD; the banks' data terms
+and attribution requirements apply separately. Source/API changes may require a
+worker update. Report reproducible failures with a redacted query and source period,
+without credentials or private server URLs.

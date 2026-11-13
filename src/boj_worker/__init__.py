@@ -1,0 +1,1 @@
+"""VGI boj worker package."""

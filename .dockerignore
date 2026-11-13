@@ -6,3 +6,7 @@
 .ruff_cache/
 .pytest_cache/
 dist/
+build/
+.env
+.env.*
+.vgi-review-cache.json

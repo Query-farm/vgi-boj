@@ -5,25 +5,17 @@ HAYBARN_VERSION ?= 2.0.0rc11
 # vgi-lint is deliberately not pinned: the gate tracks the current quality bar.
 VGI_LINT        := uvx --prerelease=allow --from 'vgi-lint-check>=2,<3' vgi-lint lint
 LINT_ARGS       ?=
-WORKER          := $(CURDIR)/.venv/bin/vgi-starter-worker
+WORKER          := $(CURDIR)/.venv/bin/vgi-boj-worker
 TOOLS           := $(CURDIR)/.tools
 HAYBARN_UNITTEST := $(TOOLS)/bin/haybarn-unittest
 TRANSPORT       ?= stdio
 
 .DEFAULT_GOAL := help
 .PHONY: help build test test-unit test-sql test-sql-all lint lint-explain lint-ai fmt check run run-http debug tools template-diff clean
-# template-only:start
-.PHONY: init
-# template-only:end
 
 help: ## List the targets
 	@awk 'BEGIN{FS=":.*## "} /^[a-zA-Z_-]+:.*## /{printf "  %-14s %s\n",$$1,$$2}' $(MAKEFILE_LIST)
 
-# template-only:start
-init: ## Rename this template: make init NAME=weather
-	@test -n "$(NAME)" || { echo "usage: make init NAME=<snake_case_name>"; exit 2; }
-	uv run --no-project python scripts/vgi_template.py init $(NAME)
-# template-only:end
 
 build: ## Install the worker and dev tools into .venv
 	uv sync --locked
@@ -32,12 +24,12 @@ tools: ## Install the pinned SQL test runner into .tools
 	@test -x $(HAYBARN_UNITTEST) || { uv venv -q $(TOOLS) && uv pip install -q -p $(TOOLS) haybarn-unittest==$(HAYBARN_VERSION); }
 
 fmt: ## Format the code
-	uv run ruff format src tests test examples examples
-	uv run ruff check --fix src tests test examples examples
+	uv run ruff format src tests test examples ci
+	uv run ruff check --fix src tests test examples ci
 
 lint: build ## Static checks: ruff, mypy, pydoclint
-	uv run ruff format --check src tests test examples examples
-	uv run ruff check src tests test examples examples
+	uv run ruff format --check src tests test examples ci
+	uv run ruff check src tests test examples ci
 	uv run mypy
 	uvx pydoclint --config=pyproject.toml src
 
@@ -55,12 +47,12 @@ test-sql-all: ## SQL tests over every transport
 test: test-unit test-sql ## Unit + SQL tests
 
 lint-explain: build ## Metadata quality report (vgi-lint, settings in vgi-lint.toml). LINT_ARGS="--format agent" for agents
-	$(VGI_LINT) "$(WORKER)" $(LINT_ARGS)
+	uv run python ci/run-metadata.py $(VGI_LINT) "$(WORKER)" $(LINT_ARGS)
 
 lint-ai: ## Opt-in L3 check: an agent runs vgi-agent-tests.yaml and docs are reviewed (needs the claude CLI)
 	@$(MAKE) --no-print-directory lint-explain LINT_ARGS="--ai $(LINT_ARGS)"
 
-check: lint test-unit test-sql-all lint-explain ## Everything CI runs. Done = this passes.
+check: lint test-unit test-sql-all lint-explain test-duckdb ## Everything CI runs. Done = this passes.
 
 run: build ## Serve over stdio (what DuckDB launches)
 	$(WORKER)
@@ -69,7 +61,7 @@ run-http: build ## Serve over HTTP on port 8000
 	$(WORKER) --http --host 127.0.0.1 --port 8000
 
 debug: build tools ## Run one query against the worker with debug logging on stderr
-	@printf "LOAD vgi;\nATTACH 'starter' (TYPE vgi, LOCATION '$(WORKER) --debug');\nSELECT starter.main.greet('debug');\n" \
+	@printf "LOAD vgi;\nATTACH 'boj' (TYPE vgi, LOCATION '$(WORKER) --debug');\nSELECT function_name FROM duckdb_functions() WHERE database_name = 'boj' ORDER BY function_name;\n" \
 	  | uvx --from haybarn-cli==$(HAYBARN_VERSION) haybarn -no-agent
 
 template-diff: ## Show upstream template changes since this project was created
@@ -77,3 +69,15 @@ template-diff: ## Show upstream template changes since this project was created
 
 clean: ## Remove build outputs and tool caches
 	rm -rf .venv .tools dist build .mypy_cache .ruff_cache .pytest_cache
+
+.PHONY: test-duckdb smoke-live package
+
+test-duckdb: build ## Verify stock DuckDB and authenticated HTTP against offline fixtures
+	uv run --with duckdb==2.0.0 python test/run_duckdb.py --output build/duckdb-verification.json
+	uv run --with duckdb==2.0.0 python test/run_duckdb.py --http-auth --output build/http-auth-verification.json
+
+smoke-live: build ## Verify against the official live API using operator-provided credentials
+	uv run --with duckdb==2.0.0 python test/run_duckdb.py --live --output build/live-verification.json
+
+package: ## Build installable wheel and source distribution
+	uv build --sdist --wheel

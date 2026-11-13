@@ -9,7 +9,7 @@ import pytest
 from vgi.arguments import Arguments
 from vgi.client import Client
 
-from starter_worker.greet import _greet
+from examples.starter_samples.greet import _greet
 
 SCHEMA = ["main"]
 

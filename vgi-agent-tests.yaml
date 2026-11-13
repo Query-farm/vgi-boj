@@ -1,16 +1,24 @@
-# Private graders for the public vgi.agent_test_tasks in the worker's catalog metadata.
-# `vgi-lint lint --ai` runs an agent on each prompt and grades it with check_sql.
-# See https://github.com/Query-farm/vgi-lint-check (VGI920).
-tasks:
-  - name: formal_greeting
-    reference_sql: SELECT starter.main.greet('Grace', 'formal') AS greeting
-  - name: sum_of_squares
-    reference_sql: SELECT sum(squared) AS total FROM starter.main.sequence_table(10)
-  - name: stepped_sequence
-    reference_sql: SELECT n FROM starter.main.sequence_table(4, step := 5) ORDER BY n
-  # Reads the public demo API (https://vgi-starter-api.query-farm.services/v1).
-  - name: items_per_category
-    check_sql: >-
-      SELECT count(*) = 3 AND sum(items) = 25
-      FROM (SELECT category, count(*) AS items
-            FROM starter.main.fetch_items('https://vgi-starter-api.query-farm.services/v1') GROUP BY category)
+{
+  "tasks": [
+    {
+      "name": "datasets",
+      "reference_sql": "SELECT database, name FROM boj.main.datasets(query := 'rate') ORDER BY database"
+    },
+    {
+      "name": "series",
+      "reference_sql": "SELECT series_code, name, frequency FROM boj.main.series('IR01') ORDER BY series_code"
+    },
+    {
+      "name": "layers",
+      "reference_sql": "SELECT name, layer1, layer2 FROM boj.main.layers('IR01') ORDER BY layer1, layer2, name"
+    },
+    {
+      "name": "observations",
+      "reference_sql": "SELECT period, value, unit FROM boj.main.observations('IR01', ['MADR1Z@D'], start_period := '202401', end_period := '202401') ORDER BY period"
+    },
+    {
+      "name": "layer_observations",
+      "reference_sql": "SELECT series_code, period, value FROM boj.main.layer_observations('IR01', 'D', '1,1', start_period := '202401', end_period := '202401') ORDER BY series_code, period"
+    }
+  ]
+}
