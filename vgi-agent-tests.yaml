@@ -19,6 +19,10 @@
     {
       "name": "layer_observations",
       "reference_sql": "SELECT series_code, period, value FROM boj.main.layer_observations('IR01', 'D', '1,1', start_period := '202401', end_period := '202401') ORDER BY series_code, period"
+    },
+    {
+      "name": "call_rate_at_basic_loan_rate_change",
+      "reference_sql": "SELECT b.period, b.value AS basic_loan_rate, c.value AS call_rate, round((b.value - c.value) * 100, 1) AS gap_bp FROM boj.main.observations('IR01', ['MADR1Z@D'], start_period := '202407', end_period := '202408') AS b JOIN boj.main.observations('FM01', ['STRDCLUCON'], start_period := '202407', end_period := '202408') AS c USING (period) WHERE b.value > (SELECT value FROM boj.main.observations('IR01', ['MADR1Z@D'], start_period := '202407', end_period := '202407') WHERE period = '20240701') ORDER BY b.period LIMIT 1"
     }
   ]
 }

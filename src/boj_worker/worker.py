@@ -55,6 +55,21 @@ CATALOG_TAGS["vgi.agent_test_tasks"] = json.dumps(
         }
         for fn in FUNCTIONS
     ]
+    + [
+        {
+            # Composed task: combines the overnight call rate (FM01) with the Basic Loan Rate
+            # (IR01); the answer is a different query from any published example.
+            "name": "call_rate_at_basic_loan_rate_change",
+            "prompt": (
+                "Using the boj catalog, find the first day in July-August 2024 on which the Bank of "
+                "Japan's Basic Loan Rate (IR01 series MADR1Z@D) was higher than on 1 July 2024. "
+                "Return one row with columns period (VARCHAR, YYYYMMDD), basic_loan_rate (DOUBLE), "
+                "call_rate (DOUBLE, the uncollateralized overnight call rate average, FM01 series "
+                "STRDCLUCON, on that day) and gap_bp (DOUBLE, basic_loan_rate minus call_rate in "
+                "basis points, rounded to 1 decimal)."
+            ),
+        }
+    ]
 )
 
 

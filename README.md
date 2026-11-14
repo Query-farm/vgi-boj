@@ -49,6 +49,24 @@ preserves English/Japanese fields when supplied. `include_headings := true` on
 `series` includes metadata headings with NULL series codes. `layers` always returns
 only headings; its inherited `include_headings` argument has no effect.
 
+Functions combine in one query. This compares each business day's overnight call
+rate band (FM01 layer 1) with the Basic Loan Rate (IR01) in March 2024, when the
+call rate turned positive:
+
+```sql
+SELECT c.period,
+       max(c.value) FILTER (WHERE c.series_code = 'STRDCLUCON')  AS call_avg,
+       max(c.value) FILTER (WHERE c.series_code = 'STRDCLUCONH') AS call_high,
+       any_value(b.value) AS basic_loan_rate
+FROM boj.main.layer_observations('FM01', 'D', '1',
+       start_period := '202403', end_period := '202403') AS c
+JOIN boj.main.observations('IR01', ['MADR1Z@D'],
+       start_period := '202403', end_period := '202403') AS b USING (period)
+WHERE c.value IS NOT NULL
+GROUP BY c.period
+ORDER BY c.period;
+```
+
 `series_codes` accepts 1–1,250 distinct codes from one database and frequency,
 without a database prefix (use `MADR1Z@D`, not `IR01'MADR1Z@D`). Codes are normalized
 to uppercase. For hierarchy queries, frequency is `CY`, `FY`, `CH`, `FH`, `Q`, `M`,

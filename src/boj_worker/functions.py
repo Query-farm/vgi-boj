@@ -10,6 +10,7 @@ from typing import Annotated, Any, ClassVar
 import pyarrow as pa
 from vgi.arguments import Arg
 from vgi.invocation import BindResponse
+from vgi.metadata import FunctionExample
 from vgi.table_function import BindParams, OutputCollector, ProcessParams, TableFunctionGenerator, init_single_worker
 from vgi_rpc import ArrowSerializableDataclass
 
@@ -55,6 +56,47 @@ OBSERVATIONS = pa.schema(
         column("value", pa.float64(), "Numeric observation in published units; NULL for source missing values."),
         column("value_text", pa.string(), "Original JSON numeric lexeme or string for exact decimal conversion."),
     ]
+)
+
+
+# Composed examples: each combines two of this catalog's functions in one query.
+# Defined once here and attached to the function that drives the query; the
+# schema-level example list is collected from the functions in worker.py.
+SERIES_BY_HEADING = FunctionExample(
+    description=(
+        "Group FM08 foreign exchange series under their hierarchy headings from layers, with "
+        "the layer selection string to pass to layer_observations for each branch"
+    ),
+    sql=(
+        "SELECT top.name AS section, sub.name AS subsection, s.frequency, "
+        "CASE WHEN sub.name IS NULL THEN s.layer1::VARCHAR ELSE s.layer1 || ',' || s.layer2 END AS layer, "
+        "count(*) AS series_count "
+        "FROM boj.main.series('FM08') AS s "
+        "JOIN boj.main.layers('FM08') AS top ON top.layer1 = s.layer1 AND top.layer2 = 0 "
+        "LEFT JOIN boj.main.layers('FM08') AS sub "
+        "ON sub.layer1 = s.layer1 AND sub.layer2 = s.layer2 AND sub.layer2 <> 0 AND sub.layer3 = 0 "
+        "GROUP BY ALL ORDER BY layer"
+    ),
+)
+CALL_RATE_VS_BASIC_LOAN_RATE = FunctionExample(
+    description=(
+        "Compare each business day's uncollateralized overnight call rate (average, highest and "
+        "lowest from FM01 layer 1) with the Basic Loan Rate from IR01 in March 2024, when the "
+        "call rate turned positive, with the day's highest call rate's headroom below the Basic "
+        "Loan Rate in basis points"
+    ),
+    sql=(
+        "SELECT c.period, "
+        "max(c.value) FILTER (WHERE c.series_code = 'STRDCLUCON') AS call_avg, "
+        "max(c.value) FILTER (WHERE c.series_code = 'STRDCLUCONH') AS call_high, "
+        "max(c.value) FILTER (WHERE c.series_code = 'STRDCLUCONL') AS call_low, "
+        "any_value(b.value) AS basic_loan_rate, "
+        "round((any_value(b.value) - max(c.value) FILTER (WHERE c.series_code = 'STRDCLUCONH')) * 100, 1) "
+        "AS headroom_bp "
+        "FROM boj.main.layer_observations('FM01', 'D', '1', start_period := '202403', end_period := '202403') AS c "
+        "JOIN boj.main.observations('IR01', ['MADR1Z@D'], start_period := '202403', end_period := '202403') AS b "
+        "USING (period) WHERE c.value IS NOT NULL GROUP BY c.period ORDER BY c.period"
+    ),
 )
 
 
@@ -155,7 +197,7 @@ class CodeArgs(DataArgs):
         Arg(
             1,
             arrow_type=pa.list_(pa.string()),
-            doc=("One to 1250 distinct source codes of the same frequency, without the database prefix,."),
+            doc=("One to 1250 distinct source codes of the same frequency, without the database prefix."),
         ),
     ]
 
@@ -332,6 +374,7 @@ class Series(BojFunction[MetadataArgs]):
         ),
         SERIES,
         "SELECT series_code, name, frequency FROM boj.main.series('IR01') ORDER BY series_code",
+        composed=(SERIES_BY_HEADING,),
     )
 
     @classmethod
@@ -453,6 +496,7 @@ class LayerObservations(BojFunction[LayerArgs]):
             "SELECT series_code, period, value FROM boj.main.layer_observations('IR01', 'D', "
             "'1,1', start_period := '202401', end_period := '202401') ORDER BY series_code, period"
         ),
+        composed=(CALL_RATE_VS_BASIC_LOAN_RATE,),
     )
 
     @classmethod

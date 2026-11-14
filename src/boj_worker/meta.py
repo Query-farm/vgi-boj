@@ -114,8 +114,19 @@ CATALOG_TAGS = {
 }
 
 
-def function_meta(name: str, title: str, description: str, schema: pa.Schema, sql: str) -> Any:
-    """Build consistent, discoverable metadata for an authenticated table function."""
+def function_meta(
+    name: str,
+    title: str,
+    description: str,
+    schema: pa.Schema,
+    sql: str,
+    composed: tuple[FunctionExample, ...] = (),
+) -> Any:
+    """Build consistent, discoverable metadata for an authenticated table function.
+
+    ``composed`` examples combine this function with other functions of the
+    catalog; they follow the single-function example so agents see them.
+    """
     types = {
         "string": "VARCHAR",
         "int64": "BIGINT",
@@ -167,5 +178,5 @@ def function_meta(name: str, title: str, description: str, schema: pa.Schema, sq
             ]
         ),
     }
-    Meta.examples = [FunctionExample(sql=sql, description=title)]
+    Meta.examples = [FunctionExample(sql=sql, description=title), *composed]
     return Meta

@@ -32,7 +32,22 @@ SELECT name_ja FROM boj.main.series('IR01', language := 'jp', max_rows := 1);
 query TTT
 SELECT series_code, layer1, layer2 FROM boj.main.layers('IR01');
 ----
-NULL	1	1
+NULL	1	0
+
+# composed: series grouped under layers headings (SERIES_BY_HEADING example)
+query TTTTI
+SELECT top.name AS section, sub.name AS subsection, s.frequency, CASE WHEN sub.name IS NULL THEN s.layer1::VARCHAR ELSE s.layer1 || ',' || s.layer2 END AS layer, count(*) AS series_count FROM boj.main.series('FM08') AS s JOIN boj.main.layers('FM08') AS top ON top.layer1 = s.layer1 AND top.layer2 = 0 LEFT JOIN boj.main.layers('FM08') AS sub ON sub.layer1 = s.layer1 AND sub.layer2 = s.layer2 AND sub.layer2 <> 0 AND sub.layer3 = 0 GROUP BY ALL ORDER BY layer;
+----
+Fixture heading	NULL	DAILY	1	2
+
+# composed: layer_observations joined to observations on the native period
+query TTT
+SELECT c.series_code, c.period, b.value FROM boj.main.layer_observations('FM01', 'D', '1', start_period := '202403', end_period := '202403') AS c JOIN boj.main.observations('IR01', ['MADR1Z@D'], start_period := '202403', end_period := '202403') AS b USING (period) WHERE c.value IS NOT NULL ORDER BY c.series_code, c.period;
+----
+MADR1Z@D	20240301	0.3
+MADR1Z@D	20240303	0.35
+OTHERD	20240301	0.3
+OTHERD	20240303	0.35
 
 # automatic pages
 query TT

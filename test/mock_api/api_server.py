@@ -49,7 +49,8 @@ class Handler(BaseHTTPRequestHandler):
                 "START_OF_THE_TIME_SERIES": "20240101",
                 "END_OF_THE_TIME_SERIES": "20240103",
                 "NOTES": "Fixture note",
-                **{f"LAYER{i}": 1 if i < 3 else 0 for i in range(1, 6)},
+                # Like the real hierarchy: the heading is layer 1, its series layer 1,1.
+                **{f"LAYER{i}": 1 if i < (3 if code else 2) else 0 for i in range(1, 6)},
             }
             if query.get("lang") == ["jp"]:
                 row.update(NAME_OF_TIME_SERIES_J="金利", UNIT_J="年率\uff05", CATEGORY_J="金利データ")
@@ -65,7 +66,11 @@ class Handler(BaseHTTPRequestHandler):
             rows = []
             for code in current:
                 row = record(code)
-                row["VALUES"] = {"SURVEY_DATES": [20240101, 20240102, 20240103], "VALUES": ["0.30", None, "0.35"]}
+                # Daily dates fall in the requested start month (default January 2024).
+                start = query.get("startDate", [""])[0]
+                month = int(start) if len(start) == 6 else 202401
+                dates = [month * 100 + day for day in (1, 2, 3)]
+                row["VALUES"] = {"SURVEY_DATES": dates, "VALUES": ["0.30", None, "0.35"]}
                 if mode == "BADARRAY":
                     row["VALUES"]["VALUES"].pop()
                 if mode == "BADVALUE":
@@ -76,7 +81,7 @@ class Handler(BaseHTTPRequestHandler):
             next_position = position + 1 if position < len(selected) else None
             if mode == "STALLED":
                 next_position = position
-            if mode == "EMPTY" or query.get("startDate", [""])[0] > "202401":
+            if mode == "EMPTY" or query.get("startDate", [""])[0] > "202412":
                 rows, next_position = [], None
                 result["MESSAGEID"] = "M181030I"
             if mode == "WRONGPOS":
