@@ -1,0 +1,26 @@
+{
+  "query": "SELECT tags FROM duckdb_databases() WHERE database_name='boj'",
+  "columns": [
+    "tags"
+  ],
+  "rows": [
+    [
+      {
+        "vgi.agent_test_tasks": "[{\"name\": \"datasets\", \"prompt\": \"Using boj.main.datasets, discover boj database examples. Use the arguments in this example and return the same columns: SELECT database, name FROM boj.main.datasets(query := 'rate') ORDER BY database\"}, {\"name\": \"series\", \"prompt\": \"Using boj.main.series, discover boj series metadata. Use the arguments in this example and return the same columns: SELECT series_code, name, frequency FROM boj.main.series('IR01') ORDER BY series_code\"}, {\"name\": \"layers\", \"prompt\": \"Using boj.main.layers, discover boj hierarchy headings. Use the arguments in this example and return the same columns: SELECT name, layer1, layer2 FROM boj.main.layers('IR01') ORDER BY layer1, layer2, name\"}, {\"name\": \"observations\", \"prompt\": \"Using boj.main.observations, read boj observations by code. Use the arguments in this example and return the same columns: SELECT period, value, unit FROM boj.main.observations('IR01', ['MADR1Z@D'], start_period := '202401', end_period := '202401') ORDER BY period\"}, {\"name\": \"layer_observations\", \"prompt\": \"Using boj.main.layer_observations, read boj observations by hierarchy. Use the arguments in this example and return the same columns: SELECT series_code, period, value FROM boj.main.layer_observations('IR01', 'D', '1,1', start_period := '202401', end_period := '202401') ORDER BY series_code, period\"}, {\"name\": \"call_rate_at_basic_loan_rate_change\", \"prompt\": \"Using the boj catalog, find the first day in July-August 2024 on which the Bank of Japan's Basic Loan Rate (IR01 series MADR1Z@D) was higher than on 1 July 2024. Return one row with columns period (VARCHAR, YYYYMMDD), basic_loan_rate (DOUBLE), call_rate (DOUBLE, the uncollateralized overnight call rate average, FM01 series STRDCLUCON, on that day) and gap_bp (DOUBLE, basic_loan_rate minus call_rate in basis points, rounded to 1 decimal).\"}]",
+        "vgi.author": "Query.Farm",
+        "vgi.copyright": "Copyright 2026 Query.Farm contributors",
+        "vgi.doc_llm": "Discover Bank of Japan statistical series and retrieve observations with original periods, units and source metadata. The upstream public data service needs no API key. SQL NULL arguments are rejected; missing source values become NULL. Use function arguments for source filtering; SQL WHERE filters are local. HTTP worker access can require a bearer token.",
+        "vgi.doc_md": "# vgi-boj\n\nDiscover Bank of Japan statistical series and retrieve observations with original periods, units and source metadata. The upstream public data service needs no API key. SQL NULL arguments are rejected; missing source values become NULL. Use function arguments for source filtering; SQL WHERE filters are local. HTTP worker access can require a bearer token.\n\nQueries use bounded HTTP responses and retries. Credentials stay out of continuation state. See README.md for deployment and operational limits.",
+        "vgi.executable_examples": "[{\"name\": \"discover_datasets\", \"description\": \"Discover available functions without credentials or API requests\", \"sql\": \"SELECT function_name FROM duckdb_functions() WHERE database_name = 'boj' AND function_name = 'datasets' ORDER BY function_name\", \"expected_result\": [{\"function_name\": \"datasets\"}]}]",
+        "vgi.icon_url": "https://query.farm/media-kit/products/vgi/vgi-logo.png",
+        "vgi.keywords": "[\"boj\", \"economics\", \"public data\", \"time series\", \"duckdb\", \"sql\"]",
+        "vgi.license": "0BSD",
+        "vgi.source_url": "https://github.com/Query-farm/vgi-boj",
+        "vgi.subtitle": "Discover Bank of Japan statistical series and retrieve observations with original periods, units and source metadata.",
+        "vgi.support_contact": "https://github.com/Query-farm/vgi-boj/issues",
+        "vgi.support_policy_url": "https://github.com/Query-farm/vgi-boj/blob/main/README.md",
+        "vgi.title": "BOJ Statistics"
+      }
+    ]
+  ]
+}

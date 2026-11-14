@@ -1,0 +1,5 @@
+line-length = 100
+exclude = ["artifacts", "validation", ".venv", ".vgi-examples"]
+[lint]
+select = ["E", "F"]
+ignore = ["E501", "F821"]

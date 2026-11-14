@@ -1,0 +1,255 @@
+{
+  "query": "SELECT * FROM duckdb_functions() WHERE database_name='boj' ORDER BY schema_name,function_name",
+  "columns": [
+    "database_name",
+    "database_oid",
+    "schema_name",
+    "function_name",
+    "alias_of",
+    "function_type",
+    "description",
+    "comment",
+    "tags",
+    "return_type",
+    "parameters",
+    "parameter_types",
+    "varargs",
+    "macro_definition",
+    "has_side_effects",
+    "internal",
+    "extension_name",
+    "function_oid",
+    "examples",
+    "stability",
+    "categories"
+  ],
+  "rows": [
+    [
+      "boj",
+      "22592",
+      "main",
+      "datasets",
+      null,
+      "table",
+      "Search curated database starting points without a network call. The official API manual lists all databases. Any valid official database code can be passed to series and observation functions.",
+      null,
+      {
+        "vgi.category": "api",
+        "vgi.doc_llm": "Search curated database starting points without a network call. The official API manual lists all databases. Any valid official database code can be passed to series and observation functions. Returns typed columns database, name, source_url. The public upstream API needs no key. Amounts retain source scales; original source strings remain available in JSON. NULL arguments are rejected. Missing optional response fields return NULL. Upstream errors fail the query; SQL WHERE filters are local.",
+        "vgi.doc_md": "## datasets\n\nSearch curated database starting points without a network call. The official API manual lists all databases. Any valid official database code can be passed to series and observation functions. Returns typed columns database, name, source_url. The public upstream API needs no key. Amounts retain source scales; original source strings remain available in JSON. NULL arguments are rejected. Missing optional response fields return NULL. Upstream errors fail the query; SQL WHERE filters are local.",
+        "vgi.example_queries": "[{\"description\": \"Discover BoJ database examples\", \"sql\": \"SELECT database, name FROM boj.main.datasets(query := 'rate') ORDER BY database\"}]",
+        "vgi.keywords": "[\"boj\", \"economics\", \"time series\", \"datasets\"]",
+        "vgi.result_columns_schema": "[{\"name\": \"database\", \"type\": \"VARCHAR\", \"description\": \"Official database code accepted by the API.\"}, {\"name\": \"name\", \"type\": \"VARCHAR\", \"description\": \"Curated database name; this catalog is not exhaustive.\"}, {\"name\": \"source_url\", \"type\": \"VARCHAR\", \"description\": \"Official API manual with the complete database list.\"}]",
+        "vgi.title": "Discover BoJ database examples"
+      },
+      null,
+      [
+        "query",
+        "max_rows"
+      ],
+      [
+        "VARCHAR",
+        "BIGINT"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22596,
+      [
+        "SELECT database, name FROM boj.main.datasets(query := 'rate') ORDER BY database"
+      ],
+      null,
+      []
+    ],
+    [
+      "boj",
+      "22592",
+      "main",
+      "layer_observations",
+      null,
+      "table",
+      "Retrieve series matching layer numbers and frequency, following source pagination. The API rejects more than 1250 layer matches before frequency filtering; narrow the hierarchy when necessary. W includes available weekly subtypes. database, frequency and layer are positional; bounds and controls are named.",
+      null,
+      {
+        "vgi.category": "api",
+        "vgi.doc_llm": "Retrieve series matching layer numbers and frequency, following source pagination. The API rejects more than 1250 layer matches before frequency filtering; narrow the hierarchy when necessary. W includes available weekly subtypes. database, frequency and layer are positional; bounds and controls are named. Returns typed columns database, series_code, name, name_ja, unit, unit_ja, frequency, category, category_ja, last_update, start_period, end_period, notes, layer1, layer2, layer3, layer4, layer5, source_timestamp, metadata_json, period, value, value_text. The public upstream API needs no key. Amounts retain source scales; original source strings remain available in JSON. NULL arguments are rejected. Missing optional response fields return NULL. Upstream errors fail the query; SQL WHERE filters are local.",
+        "vgi.doc_md": "## layer_observations\n\nRetrieve series matching layer numbers and frequency, following source pagination. The API rejects more than 1250 layer matches before frequency filtering; narrow the hierarchy when necessary. W includes available weekly subtypes. database, frequency and layer are positional; bounds and controls are named. Returns typed columns database, series_code, name, name_ja, unit, unit_ja, frequency, category, category_ja, last_update, start_period, end_period, notes, layer1, layer2, layer3, layer4, layer5, source_timestamp, metadata_json, period, value, value_text. The public upstream API needs no key. Amounts retain source scales; original source strings remain available in JSON. NULL arguments are rejected. Missing optional response fields return NULL. Upstream errors fail the query; SQL WHERE filters are local.",
+        "vgi.example_queries": "[{\"description\": \"Read BoJ observations by hierarchy\", \"sql\": \"SELECT series_code, period, value FROM boj.main.layer_observations('IR01', 'D', '1,1', start_period := '202401', end_period := '202401') ORDER BY series_code, period\"}, {\"description\": \"Compare each business day's uncollateralized overnight call rate (average, highest and lowest from FM01 layer 1) with the Basic Loan Rate from IR01 in March 2024, when the call rate turned positive, with the day's highest call rate's headroom below the Basic Loan Rate in basis points\", \"sql\": \"SELECT c.period, max(c.value) FILTER (WHERE c.series_code = 'STRDCLUCON') AS call_avg, max(c.value) FILTER (WHERE c.series_code = 'STRDCLUCONH') AS call_high, max(c.value) FILTER (WHERE c.series_code = 'STRDCLUCONL') AS call_low, any_value(b.value) AS basic_loan_rate, round((any_value(b.value) - max(c.value) FILTER (WHERE c.series_code = 'STRDCLUCONH')) * 100, 1) AS headroom_bp FROM boj.main.layer_observations('FM01', 'D', '1', start_period := '202403', end_period := '202403') AS c JOIN boj.main.observations('IR01', ['MADR1Z@D'], start_period := '202403', end_period := '202403') AS b USING (period) WHERE c.value IS NOT NULL GROUP BY c.period ORDER BY c.period\"}]",
+        "vgi.keywords": "[\"boj\", \"economics\", \"time series\", \"layer_observations\"]",
+        "vgi.result_columns_schema": "[{\"name\": \"database\", \"type\": \"VARCHAR\", \"description\": \"Requested source database.\"}, {\"name\": \"series_code\", \"type\": \"VARCHAR\", \"description\": \"Source series code; NULL for hierarchy headings.\"}, {\"name\": \"name\", \"type\": \"VARCHAR\", \"description\": \"English series name when supplied.\"}, {\"name\": \"name_ja\", \"type\": \"VARCHAR\", \"description\": \"Japanese series name when supplied.\"}, {\"name\": \"unit\", \"type\": \"VARCHAR\", \"description\": \"English unit label in original source scale.\"}, {\"name\": \"unit_ja\", \"type\": \"VARCHAR\", \"description\": \"Japanese unit label when supplied.\"}, {\"name\": \"frequency\", \"type\": \"VARCHAR\", \"description\": \"Native frequency label; weekly subtypes remain distinct.\"}, {\"name\": \"category\", \"type\": \"VARCHAR\", \"description\": \"English source category.\"}, {\"name\": \"category_ja\", \"type\": \"VARCHAR\", \"description\": \"Japanese source category when supplied.\"}, {\"name\": \"last_update\", \"type\": \"DATE\", \"description\": \"Source update date, not an observation vintage.\"}, {\"name\": \"start_period\", \"type\": \"VARCHAR\", \"description\": \"First recorded native period from metadata.\"}, {\"name\": \"end_period\", \"type\": \"VARCHAR\", \"description\": \"Last recorded native period from metadata.\"}, {\"name\": \"notes\", \"type\": \"VARCHAR\", \"description\": \"Source notes when supplied.\"}, {\"name\": \"layer1\", \"type\": \"BIGINT\", \"description\": \"Source hierarchy level 1; zero indicates an unused level.\"}, {\"name\": \"layer2\", \"type\": \"BIGINT\", \"description\": \"Source hierarchy level 2; zero indicates an unused level.\"}, {\"name\": \"layer3\", \"type\": \"BIGINT\", \"description\": \"Source hierarchy level 3; zero indicates an unused level.\"}, {\"name\": \"layer4\", \"type\": \"BIGINT\", \"description\": \"Source hierarchy level 4; zero indicates an unused level.\"}, {\"name\": \"layer5\", \"type\": \"BIGINT\", \"description\": \"Source hierarchy level 5; zero indicates an unused level.\"}, {\"name\": \"source_timestamp\", \"type\": \"VARCHAR\", \"description\": \"Original JST response or metadata creation timestamp.\"}, {\"name\": \"metadata_json\", \"type\": \"VARCHAR\", \"description\": \"All source series fields except observation arrays.\"}, {\"name\": \"period\", \"type\": \"VARCHAR\", \"description\": \"Native survey period code; interpret using frequency without inventing a date.\"}, {\"name\": \"value\", \"type\": \"DOUBLE\", \"description\": \"Numeric observation in published units; NULL for source missing values.\"}, {\"name\": \"value_text\", \"type\": \"VARCHAR\", \"description\": \"Original JSON numeric lexeme or string for exact decimal conversion.\"}]",
+        "vgi.title": "Read BoJ observations by hierarchy"
+      },
+      null,
+      [
+        "database",
+        "frequency",
+        "layer",
+        "start_period",
+        "max_rows",
+        "language",
+        "end_period"
+      ],
+      [
+        "VARCHAR",
+        "VARCHAR",
+        "VARCHAR",
+        "VARCHAR",
+        "BIGINT",
+        "VARCHAR",
+        "VARCHAR"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22597,
+      [
+        "SELECT series_code, period, value FROM boj.main.layer_observations('IR01', 'D', '1,1', start_period := '202401', end_period := '202401') ORDER BY series_code, period",
+        "SELECT c.period, max(c.value) FILTER (WHERE c.series_code = 'STRDCLUCON') AS call_avg, max(c.value) FILTER (WHERE c.series_code = 'STRDCLUCONH') AS call_high, max(c.value) FILTER (WHERE c.series_code = 'STRDCLUCONL') AS call_low, any_value(b.value) AS basic_loan_rate, round((any_value(b.value) - max(c.value) FILTER (WHERE c.series_code = 'STRDCLUCONH')) * 100, 1) AS headroom_bp FROM boj.main.layer_observations('FM01', 'D', '1', start_period := '202403', end_period := '202403') AS c JOIN boj.main.observations('IR01', ['MADR1Z@D'], start_period := '202403', end_period := '202403') AS b USING (period) WHERE c.value IS NOT NULL GROUP BY c.period ORDER BY c.period"
+      ],
+      null,
+      []
+    ],
+    [
+      "boj",
+      "22592",
+      "main",
+      "layers",
+      null,
+      "table",
+      "Return metadata rows without series codes to discover hierarchy headings and layer numbers. include_headings has no effect because this function always returns headings only. database is positional; query and language are named.",
+      null,
+      {
+        "vgi.category": "api",
+        "vgi.doc_llm": "Return metadata rows without series codes to discover hierarchy headings and layer numbers. include_headings has no effect because this function always returns headings only. database is positional; query and language are named. Returns typed columns database, series_code, name, name_ja, unit, unit_ja, frequency, category, category_ja, last_update, start_period, end_period, notes, layer1, layer2, layer3, layer4, layer5, source_timestamp, metadata_json. The public upstream API needs no key. Amounts retain source scales; original source strings remain available in JSON. NULL arguments are rejected. Missing optional response fields return NULL. Upstream errors fail the query; SQL WHERE filters are local.",
+        "vgi.doc_md": "## layers\n\nReturn metadata rows without series codes to discover hierarchy headings and layer numbers. include_headings has no effect because this function always returns headings only. database is positional; query and language are named. Returns typed columns database, series_code, name, name_ja, unit, unit_ja, frequency, category, category_ja, last_update, start_period, end_period, notes, layer1, layer2, layer3, layer4, layer5, source_timestamp, metadata_json. The public upstream API needs no key. Amounts retain source scales; original source strings remain available in JSON. NULL arguments are rejected. Missing optional response fields return NULL. Upstream errors fail the query; SQL WHERE filters are local.",
+        "vgi.example_queries": "[{\"description\": \"Discover BoJ hierarchy headings\", \"sql\": \"SELECT name, layer1, layer2 FROM boj.main.layers('IR01') ORDER BY layer1, layer2, name\"}]",
+        "vgi.keywords": "[\"boj\", \"economics\", \"time series\", \"layers\"]",
+        "vgi.result_columns_schema": "[{\"name\": \"database\", \"type\": \"VARCHAR\", \"description\": \"Requested source database.\"}, {\"name\": \"series_code\", \"type\": \"VARCHAR\", \"description\": \"Source series code; NULL for hierarchy headings.\"}, {\"name\": \"name\", \"type\": \"VARCHAR\", \"description\": \"English series name when supplied.\"}, {\"name\": \"name_ja\", \"type\": \"VARCHAR\", \"description\": \"Japanese series name when supplied.\"}, {\"name\": \"unit\", \"type\": \"VARCHAR\", \"description\": \"English unit label in original source scale.\"}, {\"name\": \"unit_ja\", \"type\": \"VARCHAR\", \"description\": \"Japanese unit label when supplied.\"}, {\"name\": \"frequency\", \"type\": \"VARCHAR\", \"description\": \"Native frequency label; weekly subtypes remain distinct.\"}, {\"name\": \"category\", \"type\": \"VARCHAR\", \"description\": \"English source category.\"}, {\"name\": \"category_ja\", \"type\": \"VARCHAR\", \"description\": \"Japanese source category when supplied.\"}, {\"name\": \"last_update\", \"type\": \"DATE\", \"description\": \"Source update date, not an observation vintage.\"}, {\"name\": \"start_period\", \"type\": \"VARCHAR\", \"description\": \"First recorded native period from metadata.\"}, {\"name\": \"end_period\", \"type\": \"VARCHAR\", \"description\": \"Last recorded native period from metadata.\"}, {\"name\": \"notes\", \"type\": \"VARCHAR\", \"description\": \"Source notes when supplied.\"}, {\"name\": \"layer1\", \"type\": \"BIGINT\", \"description\": \"Source hierarchy level 1; zero indicates an unused level.\"}, {\"name\": \"layer2\", \"type\": \"BIGINT\", \"description\": \"Source hierarchy level 2; zero indicates an unused level.\"}, {\"name\": \"layer3\", \"type\": \"BIGINT\", \"description\": \"Source hierarchy level 3; zero indicates an unused level.\"}, {\"name\": \"layer4\", \"type\": \"BIGINT\", \"description\": \"Source hierarchy level 4; zero indicates an unused level.\"}, {\"name\": \"layer5\", \"type\": \"BIGINT\", \"description\": \"Source hierarchy level 5; zero indicates an unused level.\"}, {\"name\": \"source_timestamp\", \"type\": \"VARCHAR\", \"description\": \"Original JST response or metadata creation timestamp.\"}, {\"name\": \"metadata_json\", \"type\": \"VARCHAR\", \"description\": \"All source series fields except observation arrays.\"}]",
+        "vgi.title": "Discover BoJ hierarchy headings"
+      },
+      null,
+      [
+        "database",
+        "query",
+        "max_rows",
+        "language",
+        "include_headings"
+      ],
+      [
+        "VARCHAR",
+        "VARCHAR",
+        "BIGINT",
+        "VARCHAR",
+        "BOOLEAN"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22598,
+      [
+        "SELECT name, layer1, layer2 FROM boj.main.layers('IR01') ORDER BY layer1, layer2, name"
+      ],
+      null,
+      []
+    ],
+    [
+      "boj",
+      "22592",
+      "main",
+      "observations",
+      null,
+      "table",
+      "Retrieve selected same-frequency series and automatically follow NEXTPOSITION until complete or max_rows is reached. Preserve missing values, exact numeric text and native periods. The source supplies current data, not historical vintages. database and series_codes are positional; bounds and controls are named.",
+      null,
+      {
+        "vgi.category": "api",
+        "vgi.doc_llm": "Retrieve selected same-frequency series and automatically follow NEXTPOSITION until complete or max_rows is reached. Preserve missing values, exact numeric text and native periods. The source supplies current data, not historical vintages. database and series_codes are positional; bounds and controls are named. Returns typed columns database, series_code, name, name_ja, unit, unit_ja, frequency, category, category_ja, last_update, start_period, end_period, notes, layer1, layer2, layer3, layer4, layer5, source_timestamp, metadata_json, period, value, value_text. The public upstream API needs no key. Amounts retain source scales; original source strings remain available in JSON. NULL arguments are rejected. Missing optional response fields return NULL. Upstream errors fail the query; SQL WHERE filters are local.",
+        "vgi.doc_md": "## observations\n\nRetrieve selected same-frequency series and automatically follow NEXTPOSITION until complete or max_rows is reached. Preserve missing values, exact numeric text and native periods. The source supplies current data, not historical vintages. database and series_codes are positional; bounds and controls are named. Returns typed columns database, series_code, name, name_ja, unit, unit_ja, frequency, category, category_ja, last_update, start_period, end_period, notes, layer1, layer2, layer3, layer4, layer5, source_timestamp, metadata_json, period, value, value_text. The public upstream API needs no key. Amounts retain source scales; original source strings remain available in JSON. NULL arguments are rejected. Missing optional response fields return NULL. Upstream errors fail the query; SQL WHERE filters are local.",
+        "vgi.example_queries": "[{\"description\": \"Read BoJ observations by code\", \"sql\": \"SELECT period, value, unit FROM boj.main.observations('IR01', ['MADR1Z@D'], start_period := '202401', end_period := '202401') ORDER BY period\"}]",
+        "vgi.keywords": "[\"boj\", \"economics\", \"time series\", \"observations\"]",
+        "vgi.result_columns_schema": "[{\"name\": \"database\", \"type\": \"VARCHAR\", \"description\": \"Requested source database.\"}, {\"name\": \"series_code\", \"type\": \"VARCHAR\", \"description\": \"Source series code; NULL for hierarchy headings.\"}, {\"name\": \"name\", \"type\": \"VARCHAR\", \"description\": \"English series name when supplied.\"}, {\"name\": \"name_ja\", \"type\": \"VARCHAR\", \"description\": \"Japanese series name when supplied.\"}, {\"name\": \"unit\", \"type\": \"VARCHAR\", \"description\": \"English unit label in original source scale.\"}, {\"name\": \"unit_ja\", \"type\": \"VARCHAR\", \"description\": \"Japanese unit label when supplied.\"}, {\"name\": \"frequency\", \"type\": \"VARCHAR\", \"description\": \"Native frequency label; weekly subtypes remain distinct.\"}, {\"name\": \"category\", \"type\": \"VARCHAR\", \"description\": \"English source category.\"}, {\"name\": \"category_ja\", \"type\": \"VARCHAR\", \"description\": \"Japanese source category when supplied.\"}, {\"name\": \"last_update\", \"type\": \"DATE\", \"description\": \"Source update date, not an observation vintage.\"}, {\"name\": \"start_period\", \"type\": \"VARCHAR\", \"description\": \"First recorded native period from metadata.\"}, {\"name\": \"end_period\", \"type\": \"VARCHAR\", \"description\": \"Last recorded native period from metadata.\"}, {\"name\": \"notes\", \"type\": \"VARCHAR\", \"description\": \"Source notes when supplied.\"}, {\"name\": \"layer1\", \"type\": \"BIGINT\", \"description\": \"Source hierarchy level 1; zero indicates an unused level.\"}, {\"name\": \"layer2\", \"type\": \"BIGINT\", \"description\": \"Source hierarchy level 2; zero indicates an unused level.\"}, {\"name\": \"layer3\", \"type\": \"BIGINT\", \"description\": \"Source hierarchy level 3; zero indicates an unused level.\"}, {\"name\": \"layer4\", \"type\": \"BIGINT\", \"description\": \"Source hierarchy level 4; zero indicates an unused level.\"}, {\"name\": \"layer5\", \"type\": \"BIGINT\", \"description\": \"Source hierarchy level 5; zero indicates an unused level.\"}, {\"name\": \"source_timestamp\", \"type\": \"VARCHAR\", \"description\": \"Original JST response or metadata creation timestamp.\"}, {\"name\": \"metadata_json\", \"type\": \"VARCHAR\", \"description\": \"All source series fields except observation arrays.\"}, {\"name\": \"period\", \"type\": \"VARCHAR\", \"description\": \"Native survey period code; interpret using frequency without inventing a date.\"}, {\"name\": \"value\", \"type\": \"DOUBLE\", \"description\": \"Numeric observation in published units; NULL for source missing values.\"}, {\"name\": \"value_text\", \"type\": \"VARCHAR\", \"description\": \"Original JSON numeric lexeme or string for exact decimal conversion.\"}]",
+        "vgi.title": "Read BoJ observations by code"
+      },
+      null,
+      [
+        "database",
+        "series_codes",
+        "start_period",
+        "max_rows",
+        "language",
+        "end_period"
+      ],
+      [
+        "VARCHAR",
+        "VARCHAR[]",
+        "VARCHAR",
+        "BIGINT",
+        "VARCHAR",
+        "VARCHAR"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22599,
+      [
+        "SELECT period, value, unit FROM boj.main.observations('IR01', ['MADR1Z@D'], start_period := '202401', end_period := '202401') ORDER BY period"
+      ],
+      null,
+      []
+    ],
+    [
+      "boj",
+      "22592",
+      "main",
+      "series",
+      null,
+      "table",
+      "Retrieve one database's full metadata, then optionally filter names or codes locally. English/Japanese labels, units, native period ranges, notes and layers are preserved. database is positional; language and filters are named.",
+      null,
+      {
+        "vgi.category": "api",
+        "vgi.doc_llm": "Retrieve one database's full metadata, then optionally filter names or codes locally. English/Japanese labels, units, native period ranges, notes and layers are preserved. database is positional; language and filters are named. Returns typed columns database, series_code, name, name_ja, unit, unit_ja, frequency, category, category_ja, last_update, start_period, end_period, notes, layer1, layer2, layer3, layer4, layer5, source_timestamp, metadata_json. The public upstream API needs no key. Amounts retain source scales; original source strings remain available in JSON. NULL arguments are rejected. Missing optional response fields return NULL. Upstream errors fail the query; SQL WHERE filters are local.",
+        "vgi.doc_md": "## series\n\nRetrieve one database's full metadata, then optionally filter names or codes locally. English/Japanese labels, units, native period ranges, notes and layers are preserved. database is positional; language and filters are named. Returns typed columns database, series_code, name, name_ja, unit, unit_ja, frequency, category, category_ja, last_update, start_period, end_period, notes, layer1, layer2, layer3, layer4, layer5, source_timestamp, metadata_json. The public upstream API needs no key. Amounts retain source scales; original source strings remain available in JSON. NULL arguments are rejected. Missing optional response fields return NULL. Upstream errors fail the query; SQL WHERE filters are local.",
+        "vgi.example_queries": "[{\"description\": \"Discover BoJ series metadata\", \"sql\": \"SELECT series_code, name, frequency FROM boj.main.series('IR01') ORDER BY series_code\"}, {\"description\": \"Group FM08 foreign exchange series under their hierarchy headings from layers, with the layer selection string to pass to layer_observations for each branch\", \"sql\": \"SELECT top.name AS section, sub.name AS subsection, s.frequency, CASE WHEN sub.name IS NULL THEN s.layer1::VARCHAR ELSE s.layer1 || ',' || s.layer2 END AS layer, count(*) AS series_count FROM boj.main.series('FM08') AS s JOIN boj.main.layers('FM08') AS top ON top.layer1 = s.layer1 AND top.layer2 = 0 LEFT JOIN boj.main.layers('FM08') AS sub ON sub.layer1 = s.layer1 AND sub.layer2 = s.layer2 AND sub.layer2 <> 0 AND sub.layer3 = 0 GROUP BY ALL ORDER BY layer\"}]",
+        "vgi.keywords": "[\"boj\", \"economics\", \"time series\", \"series\"]",
+        "vgi.result_columns_schema": "[{\"name\": \"database\", \"type\": \"VARCHAR\", \"description\": \"Requested source database.\"}, {\"name\": \"series_code\", \"type\": \"VARCHAR\", \"description\": \"Source series code; NULL for hierarchy headings.\"}, {\"name\": \"name\", \"type\": \"VARCHAR\", \"description\": \"English series name when supplied.\"}, {\"name\": \"name_ja\", \"type\": \"VARCHAR\", \"description\": \"Japanese series name when supplied.\"}, {\"name\": \"unit\", \"type\": \"VARCHAR\", \"description\": \"English unit label in original source scale.\"}, {\"name\": \"unit_ja\", \"type\": \"VARCHAR\", \"description\": \"Japanese unit label when supplied.\"}, {\"name\": \"frequency\", \"type\": \"VARCHAR\", \"description\": \"Native frequency label; weekly subtypes remain distinct.\"}, {\"name\": \"category\", \"type\": \"VARCHAR\", \"description\": \"English source category.\"}, {\"name\": \"category_ja\", \"type\": \"VARCHAR\", \"description\": \"Japanese source category when supplied.\"}, {\"name\": \"last_update\", \"type\": \"DATE\", \"description\": \"Source update date, not an observation vintage.\"}, {\"name\": \"start_period\", \"type\": \"VARCHAR\", \"description\": \"First recorded native period from metadata.\"}, {\"name\": \"end_period\", \"type\": \"VARCHAR\", \"description\": \"Last recorded native period from metadata.\"}, {\"name\": \"notes\", \"type\": \"VARCHAR\", \"description\": \"Source notes when supplied.\"}, {\"name\": \"layer1\", \"type\": \"BIGINT\", \"description\": \"Source hierarchy level 1; zero indicates an unused level.\"}, {\"name\": \"layer2\", \"type\": \"BIGINT\", \"description\": \"Source hierarchy level 2; zero indicates an unused level.\"}, {\"name\": \"layer3\", \"type\": \"BIGINT\", \"description\": \"Source hierarchy level 3; zero indicates an unused level.\"}, {\"name\": \"layer4\", \"type\": \"BIGINT\", \"description\": \"Source hierarchy level 4; zero indicates an unused level.\"}, {\"name\": \"layer5\", \"type\": \"BIGINT\", \"description\": \"Source hierarchy level 5; zero indicates an unused level.\"}, {\"name\": \"source_timestamp\", \"type\": \"VARCHAR\", \"description\": \"Original JST response or metadata creation timestamp.\"}, {\"name\": \"metadata_json\", \"type\": \"VARCHAR\", \"description\": \"All source series fields except observation arrays.\"}]",
+        "vgi.title": "Discover BoJ series metadata"
+      },
+      null,
+      [
+        "database",
+        "query",
+        "max_rows",
+        "language",
+        "include_headings"
+      ],
+      [
+        "VARCHAR",
+        "VARCHAR",
+        "BIGINT",
+        "VARCHAR",
+        "BOOLEAN"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22600,
+      [
+        "SELECT series_code, name, frequency FROM boj.main.series('IR01') ORDER BY series_code",
+        "SELECT top.name AS section, sub.name AS subsection, s.frequency, CASE WHEN sub.name IS NULL THEN s.layer1::VARCHAR ELSE s.layer1 || ',' || s.layer2 END AS layer, count(*) AS series_count FROM boj.main.series('FM08') AS s JOIN boj.main.layers('FM08') AS top ON top.layer1 = s.layer1 AND top.layer2 = 0 LEFT JOIN boj.main.layers('FM08') AS sub ON sub.layer1 = s.layer1 AND sub.layer2 = s.layer2 AND sub.layer2 <> 0 AND sub.layer3 = 0 GROUP BY ALL ORDER BY layer"
+      ],
+      null,
+      []
+    ]
+  ]
+}

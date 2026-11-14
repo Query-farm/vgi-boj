@@ -1,0 +1,209 @@
+{
+  "schema_version": 1,
+  "catalogs": {
+    "released": {
+      "path": "coverage/catalog-released.json",
+      "sha256": "36186473ec5d9ce53c6425b0b13b8cbe7b1910fee32428772b56fda2be65eba4",
+      "review": {
+        "status": "approved",
+        "reviewer": "/root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T23:18:47.671218+00:00",
+        "catalog_sha256": "36186473ec5d9ce53c6425b0b13b8cbe7b1910fee32428772b56fda2be65eba4",
+        "notes": "Actual complete functions/tables/views exports reconcile to five names. Current separately captured via its full public remote revision; metadata/composed-example-only source changes since release. Interfaces agree; receipts honestly execute released runtime, so exact-current execution is not claimed."
+      }
+    },
+    "current": {
+      "path": "coverage/catalog-current.json",
+      "sha256": "4f9e65a4c94c0a1e93e15a7049349c1414ef440006093e949ce9f15a84637f64",
+      "review": {
+        "status": "approved",
+        "reviewer": "/root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T23:18:47.671218+00:00",
+        "catalog_sha256": "4f9e65a4c94c0a1e93e15a7049349c1414ef440006093e949ce9f15a84637f64",
+        "notes": "Actual complete functions/tables/views exports reconcile to five names. Current separately captured via its full public remote revision; metadata/composed-example-only source changes since release. Interfaces agree; receipts honestly execute released runtime, so exact-current execution is not claimed."
+      }
+    }
+  },
+  "notebooks": [
+    {
+      "path": "01_rate_steps_and_trailing_means.ipynb",
+      "sha256": "1af4d57561dba1a942ef3a17b8f84ca9b4a48ab18295e350e757c46a7457902e",
+      "execution": {
+        "path": "coverage/run-01.json",
+        "sha256": "3d4430df96d764e9e9ea4455c3fe189df581f67615ddeaf8461f719790ed570f"
+      }
+    }
+  ],
+  "examples": [
+    {
+      "object": {
+        "schema": "main",
+        "name": "datasets"
+      },
+      "notebook": "01_rate_steps_and_trailing_means.ipynb",
+      "sql": [
+        {
+          "cell": "a37fb54b",
+          "reference": "boj.main.datasets"
+        }
+      ],
+      "narrative_cells": [
+        "030add6d"
+      ],
+      "result_cells": [
+        "b57bf5f5"
+      ],
+      "interpretation_cells": [
+        "b57bf5f5"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "/root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T23:18:47.671218+00:00",
+        "notebook_sha256": "1af4d57561dba1a942ef3a17b8f84ca9b4a48ab18295e350e757c46a7457902e",
+        "catalog_sha256": [
+          "36186473ec5d9ce53c6425b0b13b8cbe7b1910fee32428772b56fda2be65eba4",
+          "4f9e65a4c94c0a1e93e15a7049349c1414ef440006093e949ce9f15a84637f64"
+        ],
+        "purpose": "Discover and reconcile a published daily rate before analyzing complete-window smoothing.",
+        "finding": "Curated local IR01 entry establishes the database for the rate question; its limited discovery scope is explicit and subsequent live metadata determines daily granularity."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "series"
+      },
+      "notebook": "01_rate_steps_and_trailing_means.ipynb",
+      "sql": [
+        {
+          "cell": "discovery-sql",
+          "reference": "boj.main.series"
+        }
+      ],
+      "narrative_cells": [
+        "discovery-question"
+      ],
+      "result_cells": [
+        "discovery-finding"
+      ],
+      "interpretation_cells": [
+        "discovery-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "/root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T23:18:47.671218+00:00",
+        "notebook_sha256": "1af4d57561dba1a942ef3a17b8f84ca9b4a48ab18295e350e757c46a7457902e",
+        "catalog_sha256": [
+          "36186473ec5d9ce53c6425b0b13b8cbe7b1910fee32428772b56fda2be65eba4",
+          "4f9e65a4c94c0a1e93e15a7049349c1414ef440006093e949ce9f15a84637f64"
+        ],
+        "purpose": "Discover and reconcile a published daily rate before analyzing complete-window smoothing.",
+        "finding": "Two actual metadata rows share name and unit but differ DAILY/MONTHLY; the selected MADR1Z@D row has DAILY frequency, Percent per annum units and branch1,1, all verified before reading data."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "layers"
+      },
+      "notebook": "01_rate_steps_and_trailing_means.ipynb",
+      "sql": [
+        {
+          "cell": "discovery-sql",
+          "reference": "boj.main.layers"
+        }
+      ],
+      "narrative_cells": [
+        "discovery-question"
+      ],
+      "result_cells": [
+        "discovery-finding"
+      ],
+      "interpretation_cells": [
+        "discovery-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "/root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T23:18:47.671218+00:00",
+        "notebook_sha256": "1af4d57561dba1a942ef3a17b8f84ca9b4a48ab18295e350e757c46a7457902e",
+        "catalog_sha256": [
+          "36186473ec5d9ce53c6425b0b13b8cbe7b1910fee32428772b56fda2be65eba4",
+          "4f9e65a4c94c0a1e93e15a7049349c1414ef440006093e949ce9f15a84637f64"
+        ],
+        "purpose": "Discover and reconcile a published daily rate before analyzing complete-window smoothing.",
+        "finding": "The actual nonempty hierarchy heading is joined to both series on its top-level layer; the daily child1,1 is validated and used for the independent hierarchy retrieval."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "observations"
+      },
+      "notebook": "01_rate_steps_and_trailing_means.ipynb",
+      "sql": [
+        {
+          "cell": "aaba85b1",
+          "reference": "boj.main.observations"
+        }
+      ],
+      "narrative_cells": [
+        "4004315a"
+      ],
+      "result_cells": [
+        "efa3ccf2"
+      ],
+      "interpretation_cells": [
+        "5f13b0f5"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "/root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T23:18:47.671218+00:00",
+        "notebook_sha256": "1af4d57561dba1a942ef3a17b8f84ca9b4a48ab18295e350e757c46a7457902e",
+        "catalog_sha256": [
+          "36186473ec5d9ce53c6425b0b13b8cbe7b1910fee32428772b56fda2be65eba4",
+          "4f9e65a4c94c0a1e93e15a7049349c1414ef440006093e949ce9f15a84637f64"
+        ],
+        "purpose": "Discover and reconcile a published daily rate before analyzing complete-window smoothing.",
+        "finding": "One materialized full-year read supplies366 unique daily values, no absent/missing dates, and a single20bp source step. The5-day mean differs on4days with16bp maximum gap; source provenance and original strings are retained."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "layer_observations"
+      },
+      "notebook": "01_rate_steps_and_trailing_means.ipynb",
+      "sql": [
+        {
+          "cell": "route-sql",
+          "reference": "boj.main.layer_observations"
+        }
+      ],
+      "narrative_cells": [
+        "route-question"
+      ],
+      "result_cells": [
+        "route-finding"
+      ],
+      "interpretation_cells": [
+        "route-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "/root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T23:18:47.671218+00:00",
+        "notebook_sha256": "1af4d57561dba1a942ef3a17b8f84ca9b4a48ab18295e350e757c46a7457902e",
+        "catalog_sha256": [
+          "36186473ec5d9ce53c6425b0b13b8cbe7b1910fee32428772b56fda2be65eba4",
+          "4f9e65a4c94c0a1e93e15a7049349c1414ef440006093e949ce9f15a84637f64"
+        ],
+        "purpose": "Discover and reconcile a published daily rate before analyzing complete-window smoothing.",
+        "finding": "The discovered daily branch returns31 August observations; full-outer-key reconciliation verifies identical keys, missingness, original numeric strings, units, frequency and values against the code-route source. No empty demonstration or silent inner-join omission."
+      }
+    }
+  ]
+}
