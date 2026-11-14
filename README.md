@@ -186,3 +186,7 @@ service is created by a local build. Source code is 0BSD; the banks' data terms
 and attribution requirements apply separately. Source/API changes may require a
 worker update. Report reproducible failures with a redacted query and source period,
 without credentials or private server URLs.
+
+## Notebooks
+
+[Rate steps and trailing means](notebooks/README.md) — an executed public-data walkthrough of daily BOJ rates, complete calendar windows and smoothing gaps in basis points.
