@@ -117,13 +117,17 @@ CATALOG_TAGS = {
     "vgi.executable_examples": json.dumps(
         [
             {
-                "name": "discover_datasets",
-                "description": "Discover available functions without credentials or API requests",
-                "sql": (
-                    "SELECT function_name FROM duckdb_functions() WHERE database_name = 'boj' AND "
-                    "function_name = 'datasets' ORDER BY function_name"
-                ),
-                "expected_result": [{"function_name": "datasets"}],
+                "name": "interest_rate_databases",
+                "description": "List curated BoJ interest- and exchange-rate databases (no network request)",
+                "sql": "SELECT database, name FROM boj.main.datasets(query := 'rate') ORDER BY database",
+                "expected_result": [
+                    {"database": "FM01", "name": "Uncollateralized overnight call rate"},
+                    {"database": "FM08", "name": "Foreign exchange rates"},
+                    {"database": "FM09", "name": "Effective exchange rate"},
+                    {"database": "IR01", "name": "Basic Discount Rates and Basic Loan Rates"},
+                    {"database": "IR02", "name": "Deposit interest rates"},
+                    {"database": "IR04", "name": "Average contract interest rates on loans"},
+                ],
             }
         ]
     ),
