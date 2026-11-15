@@ -1,6 +1,6 @@
 [project]
 name = "vgi-boj-worker"
-version = "0.1.1"
+version = "0.1.2"
 description = "Typed BOJ statistics, discovery and observations for VGI-enabled SQL engines."
 readme = "README.md"
 license = "0BSD"

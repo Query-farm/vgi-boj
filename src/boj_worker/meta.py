@@ -72,6 +72,11 @@ CATALOG_DOC_LLM = (
     "function arguments for source filtering; SQL WHERE filters are local. HTTP worker "
     "access can require a bearer token."
 )
+CATALOG_SOURCES_MD = (
+    "\n\n## Sources and references\n\n"
+    "- [BOJ Time-Series Data Search](https://www.stat-search.boj.or.jp/index_en.html)\n"
+    "- [BOJ statistics API manual (PDF)](https://www.stat-search.boj.or.jp/info/api_manual_en.pdf)"
+)
 CATALOG_DOC_MD = (
     "# vgi-boj\n\n"
     + CATALOG_DOC_LLM
@@ -79,6 +84,10 @@ CATALOG_DOC_MD = (
         "\n\nQueries use bounded HTTP responses and retries. Credentials stay out of "
         "continuation state. See README.md for deployment and operational limits."
     )
+    + CATALOG_SOURCES_MD
+)
+SCHEMA_COMMENT = (
+    "Bank of Japan Time-Series Data Search as table functions: database layers, series metadata and observations."
 )
 SCHEMA_DOC_LLM = CATALOG_DOC_LLM
 SCHEMA_DOC_MD = (
