@@ -163,7 +163,7 @@ def request_bytes(
             "Accept": accept,
             "Accept-Encoding": "identity",
             "Content-Type": "application/json",
-            "User-Agent": "vgi-boj/0.1.0",
+            "User-Agent": "vgi-boj/0.1.1",
         },
     )
     opener = urllib.request.build_opener(_NoRedirect())
