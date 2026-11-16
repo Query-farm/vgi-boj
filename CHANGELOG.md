@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.4 (2026-11-16)
+
+- Move to Python 3.14: `requires-python >=3.14`, CI, the Docker image and lint tooling target 3.14.
+- The HTTP User-Agent reports the real version (`vgi-boj/0.1.4`).
+
 ## 0.1.3 (2026-11-16)
 
 - Bump vgi-python to 0.52.2.
