@@ -123,7 +123,7 @@ def retry_delay(header: str | None, attempt: int) -> float:
                 if when.tzinfo is None:
                     when = when.replace(tzinfo=UTC)
                 return max(0.0, (when - datetime.now(UTC)).total_seconds())
-            except (ValueError, TypeError, OverflowError):
+            except ValueError, TypeError, OverflowError:
                 pass
     return float(min(16.0, 0.5 * 2**attempt) + random.uniform(0.0, 0.25))
 
@@ -208,7 +208,7 @@ def request_bytes(
                 }.get(status, "upstream request failed")
                 raise ApiError(f"BOJ {endpoint} returned HTTP {status}: {hint}") from None
             delay = retry_delay(header, attempt)
-        except (urllib.error.URLError, TimeoutError, OSError, http.client.HTTPException):
+        except urllib.error.URLError, TimeoutError, OSError, http.client.HTTPException:
             if attempt + 1 == config.attempts:
                 raise ApiError(f"BOJ {endpoint} network request failed after {config.attempts} attempts") from None
             delay = retry_delay(None, attempt)
@@ -230,7 +230,7 @@ def request_json(
     response = request_bytes(endpoint, query, config, payload=payload)
     try:
         body = json.loads(response.body, parse_float=str, parse_constant=_invalid_constant)
-    except (ValueError, UnicodeError, RecursionError):
+    except ValueError, UnicodeError, RecursionError:
         raise ApiError("API returned invalid JSON") from None
     if not isinstance(body, dict):
         raise ApiError("API returned an invalid response or API error")

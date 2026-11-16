@@ -109,7 +109,7 @@ def main() -> None:
                             with urllib.request.urlopen(location + "/health", timeout=0.5) as response:
                                 if response.status == 200:
                                     break
-                        except (urllib.error.URLError, TimeoutError):
+                        except urllib.error.URLError, TimeoutError:
                             if worker.poll() is not None or time.monotonic() >= deadline:
                                 raise RuntimeError("HTTP worker did not become ready") from None
                             time.sleep(0.05)

@@ -15,7 +15,7 @@ def source_json(value: Any) -> str:
     """Preserve source fields with deterministic JSON and finite numbers."""
     try:
         return json.dumps(value, ensure_ascii=False, sort_keys=True, allow_nan=False)
-    except (ValueError, TypeError, OverflowError):
+    except ValueError, TypeError, OverflowError:
         raise ApiError("Response contains invalid JSON values") from None
 
 
@@ -60,7 +60,7 @@ def iso_date(value: str) -> date:
         if result.isoformat() != value:
             raise ValueError
         return result
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         raise ApiError("Date must be a valid YYYY-MM-DD calendar date") from None
 
 

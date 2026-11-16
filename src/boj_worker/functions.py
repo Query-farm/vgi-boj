@@ -287,7 +287,7 @@ class BojFunction[T: BaseArgs](TableFunctionGenerator[T, State]):
             rows = rows[: max(0, params.args.max_rows - state.emitted)]
         try:
             batch = pa.RecordBatch.from_pylist(rows, schema=params.output_schema)
-        except (pa.ArrowException, ValueError, OverflowError):
+        except pa.ArrowException, ValueError, OverflowError:
             raise ApiError("BoJ response cannot be represented by the declared schema") from None
         state.emitted += len(rows)
         if params.args.max_rows and state.emitted >= params.args.max_rows:

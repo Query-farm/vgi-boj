@@ -5,7 +5,7 @@ functions with discovery metadata, original source values and HTTP bearer authen
 
 ## Run locally
 
-Requires Python 3.13+ and [uv](https://docs.astral.sh/uv/).
+Requires Python 3.14+ and [uv](https://docs.astral.sh/uv/).
 
 ```sh
 cd /absolute/path/to/vgi-boj
@@ -139,7 +139,7 @@ docker run --rm -p 127.0.0.1:8000:8000 \
 docker run --rm -i vgi-boj:local stdio
 ```
 
-The container uses Python 3.13, locked dependencies, an unprivileged UID and a
+The container uses Python 3.14, locked dependencies, an unprivileged UID and a
 health check. Add platform resource limits appropriate to query concurrency and
 response sizes. Do not publish unauthenticated containers directly to the Internet.
 
@@ -182,14 +182,14 @@ fractional numeric lexemes before Arrow conversion.
 make check        # Ruff format/lint, mypy strict, pydoclint, pytest, real SQL, metadata
 make smoke-live   # Explicit live checks against the official source
 make package      # Wheel and source archive in dist/
-uv run python ci/verify-artifacts.py --python 3.13
+uv run python ci/verify-artifacts.py --python 3.14
 ```
 
 `make check` runs original starter and product SQL tests over Haybarn stdio, Unix
 launch and HTTP, followed by metadata assurance L2 and stock DuckDB 2.0.0 over stdio
 and authenticated HTTP. Fixtures are deterministic and do not require real keys.
 The metadata gate fails on info findings and has no waivers. CI repeats checks on
-Linux/Windows and Python 3.13/3.14, plus container and installed artifact contracts.
+Linux/Windows and Python 3.14, plus container and installed artifact contracts.
 Local verification reports live in `build/`; see [VALIDATION.md](VALIDATION.md).
 
 Starter: [Query.Farm Python starter](https://github.com/Query-farm/vgi-starter-python),

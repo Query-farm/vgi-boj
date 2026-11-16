@@ -5,7 +5,7 @@ description = "Typed BOJ statistics, discovery and observations for VGI-enabled 
 readme = "README.md"
 license = "0BSD"
 license-files = ["LICENSE"]
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 dependencies = [
     # [http] adds the HTTP transport (`--http`) used by Docker deploys.
     # SDK bumps go through the template (minor bumps can raise the protocol).
@@ -35,7 +35,7 @@ packages = ["src/boj_worker"]
 
 [tool.ruff]
 line-length = 120
-target-version = "py313"
+target-version = "py314"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "RUF", "D"]
@@ -48,7 +48,7 @@ ignore = ["D203", "D213", "RUF012"]
 
 [tool.mypy]
 strict = true
-python_version = "3.13"
+python_version = "3.14"
 files = ["src", "tests", "examples", "ci"]
 
 [[tool.mypy.overrides]]
