@@ -3,6 +3,8 @@
 Python VGI worker for Bank of Japan statistics. It exposes five typed SQL
 functions with discovery metadata, original source values and HTTP bearer authentication.
 
+vgi-boj 0.2.0 speaks VGI protocol 3.4, so it needs Haybarn 2.0.1 or newer (Haybarn 2.0.0 loads a 3.3 `vgi` extension that cannot attach it).
+
 ## Run locally
 
 Requires Python 3.14+ and [uv](https://docs.astral.sh/uv/).
@@ -29,7 +31,7 @@ FROM boj.main.observations('IR01', ['MADR1Z@D'],
 ORDER BY period;
 ```
 
-For Haybarn 2.0.0rc11, use its VGI extension and the same `ATTACH`/`SELECT` statements.
+For Haybarn 2.0.1, use its VGI extension and the same `ATTACH`/`SELECT` statements.
 The worker can also use `launch:/absolute/path/to/worker` for Unix-socket pooling.
 Diagnostics go to stderr; stdout belongs to Arrow IPC in stdio mode.
 
